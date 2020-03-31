@@ -1,0 +1,23 @@
+{
+  "name": "forking-store",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./back-end/forking-store.js",
+  "browser": "./front-end/forking-store.js",
+  "scripts": {
+    "prepublish": "npm run build",
+    "build": "babel ./forking-store.js -o ./front-end/forking-store.js; babel ./forking-store.js -o ./back-end/forking-store.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@babel/cli": "^7.8.4",
+    "@babel/core": "^7.9.0",
+    "@babel/node": "^7.8.7",
+    "@babel/plugin-proposal-class-properties": "^7.8.3",
+    "@babel/plugin-proposal-decorators": "^7.8.3",
+    "@babel/preset-env": "^7.9.0",
+    "rdflib": "^1.1.0",
+    "rdflib-frontend": "git+https://github.com/Asergey91/rdflib-frontend.git"
+  }
+}
