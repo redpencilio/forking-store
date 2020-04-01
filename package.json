@@ -8,7 +8,7 @@
     "prepublish": "npm run build",
     "build": "babel ./forking-store.js -o ./front-end/forking-store.js; babel ./forking-store.js -o ./back-end/forking-store.js"
   },
-  "author": "",
+  "author": "Sergey Andreev",
   "license": "ISC",
   "dependencies": {
     "@babel/cli": "^7.8.4",
@@ -17,7 +17,8 @@
     "@babel/plugin-proposal-class-properties": "^7.8.3",
     "@babel/plugin-proposal-decorators": "^7.8.3",
     "@babel/preset-env": "^7.9.0",
-    "rdflib": "^1.1.0",
-    "rdflib-frontend": "git+https://github.com/Asergey91/rdflib-frontend.git"
-  }
+    "browser-rdflib": "^1.0.0",
+    "rdflib": "^1.1.0"
+  },
+  "repository": {"url": "https://github.com/redpencilio/forking-store.git"}
 }
