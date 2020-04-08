@@ -12,10 +12,10 @@ When it gets included in your project it should automatically build the browser 
 
 `npm publish` if you want to update the npm package (requires npm rights).
 ## how it works
-the build script which can be found in package.json bable transpiles the code written in forking-store.js and places it in both back-end and front-end folders.
+The build script which can be found in package.json babel transpiles the code written in forking-store.js and places it in both ./back-end and ./front-end folders.
 
-bakck-end and front-end folders are entrypoints for npm "main" and "browser" respectively (defined in package.json).
+./bakck-end and ./front-end folders are entrypoints for npm "main" and "browser" respectively (defined in package.json).
 
-their main difference is that they use rdflib and browser-rdflib respectively.
+Their main difference is that they use rdflib and browser-rdflib respectively.
 
-the prepublish script in package.json will be ran before publishing as well as when npm installing.
+The prepublish script in package.json will be ran before publishing as well as when npm installing.
