@@ -1,5 +1,5 @@
 # forking-store
-forking store that works with both front-end js(ember) and back-end js(node with babel)
+Forking store that works with both front-end js(ember) and back-end js(node with babel)
 
 `npm install forking-store`
 
