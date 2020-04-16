@@ -9,7 +9,7 @@
     "build": "babel ./forking-store.js -o ./front-end/forking-store.js; babel ./forking-store.js -o ./back-end/forking-store.js"
   },
   "author": "Sergey Andreev",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "@babel/cli": "^7.8.4",
     "@babel/core": "^7.9.0",
