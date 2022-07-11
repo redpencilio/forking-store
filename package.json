@@ -2,11 +2,10 @@
   "name": "forking-store",
   "version": "1.1.0",
   "description": "",
-  "main": "./back-end/forking-store.js",
-  "browser": "./front-end/forking-store.js",
+  "main": "./dist/cjs/forking-store.js",
   "scripts": {
-    "prepublish": "npm run build",
-    "build": "babel ./forking-store.js -o ./front-end/forking-store.js; babel ./forking-store.js -o ./back-end/forking-store.js"
+    "prepare": "npm run build",
+    "build": "babel ./forking-store.js -o ./dist/cjs/forking-store.js"
   },
   "author": "Sergey Andreev",
   "license": "MIT",
@@ -17,8 +16,9 @@
     "@babel/plugin-proposal-class-properties": "^7.8.3",
     "@babel/plugin-proposal-decorators": "^7.8.3",
     "@babel/preset-env": "^7.9.0",
-    "browser-rdflib": "1.1.0",
-    "rdflib": "^1.1.0"
+    "rdflib": "^2.2.19"
   },
-  "repository": {"url": "https://github.com/redpencilio/forking-store.git"}
+  "repository": {
+    "url": "https://github.com/redpencilio/forking-store.git"
+  }
 }
