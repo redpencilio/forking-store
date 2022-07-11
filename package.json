@@ -5,7 +5,7 @@
   "main": "./dist/cjs/forking-store.js",
   "scripts": {
     "prepare": "npm run build",
-    "build": "babel ./forking-store.js -o ./dist/cjs/forking-store.js"
+    "build": "babel ./src/forking-store.js -o ./dist/cjs/forking-store.js"
   },
   "author": "Sergey Andreev",
   "license": "MIT",
