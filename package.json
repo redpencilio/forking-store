@@ -3,7 +3,10 @@
   "version": "1.1.0",
   "description": "",
   "type": "module",
-  "main": "./dist/cjs/forking-store.cjs",
+  "exports": {
+    "import": "./src/forking-store.js",
+    "require": "./dist/cjs/forking-store.cjs"
+  },
   "scripts": {
     "prepare": "npm run build",
     "build": "babel ./src/forking-store.js -o ./dist/cjs/forking-store.cjs"
