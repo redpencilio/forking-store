@@ -1,3 +1,11 @@
+## v2.1.0 (2023-09-18)
+
+#### :rocket: Enhancement
+* [#21](https://github.com/redpencilio/forking-store/pull/21) Add a `clearObservers` method ([@Windvis](https://github.com/Windvis))
+
+#### :house: Internal
+* [#22](https://github.com/redpencilio/forking-store/pull/22) Use a `Map` to store the observers ([@Windvis](https://github.com/Windvis))
+
 ## v2.0.0 (2022-07-29)
 
 #### :boom: Breaking change
