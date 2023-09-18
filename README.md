@@ -16,5 +16,7 @@ When it gets included in your project it should automatically build the browser 
 
 1. run `npm run release`
 2. follow the release-it prompts
+   - when release-it asks to commit, you can update the changelog and add it to the staged changes so it will be part of the same release commit.
+   - you can either manually edit the changelog or use lerna-changelog to generate it based on the merged PRs (`GITHUB_AUTH=your-token npx lerna-changelog`).
 3. release-it pushes the tag to GitHub
 4. Woodpecker will publish the new version to npm
