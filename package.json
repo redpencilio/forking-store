@@ -8,8 +8,12 @@
     "require": "./dist/cjs/forking-store.cjs"
   },
   "scripts": {
-    "lint": "eslint . --cache",
-    "lint:fix": "eslint . --cache --fix",
+    "lint": "concurrently --group --prefix-colors auto \"npm:lint:*(!fix)\"",
+    "lint:fix": "concurrently --group --prefix-colors auto \"npm:lint:*:fix\"",
+    "lint:js": "eslint . --cache",
+    "lint:js:fix": "eslint . --cache --fix",
+    "lint:format": "prettier --cache --check .",
+    "lint:format:fix": "prettier --cache --write .",
     "prepare": "npm run build",
     "build": "babel ./src/forking-store.js -o ./dist/cjs/forking-store.cjs",
     "test": "node --test"
@@ -24,8 +28,10 @@
     "@babel/core": "^7.18.6",
     "@babel/node": "^7.18.6",
     "@babel/preset-env": "^7.18.6",
+    "concurrently": "^8.2.1",
     "eslint": "^8.19.0",
-    "eslint-plugin-n": "^16.1.0"
+    "eslint-plugin-n": "^16.1.0",
+    "prettier": "^3.0.3"
   },
   "repository": {
     "url": "https://github.com/redpencilio/forking-store.git"
