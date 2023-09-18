@@ -1,9 +1,11 @@
 # forking-store
+
 Forking store that works with both front-end js(ember) and back-end js(node with babel)
 
 `npm install forking-store`
 
 ## development
+
 Clone the repo.
 
 Edit ./forking-store.js and link/install with npm inside your project.
