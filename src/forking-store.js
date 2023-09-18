@@ -43,7 +43,7 @@ function informObservers( payload, forkingStore ) {
       console.error( e );
     }
   }
-};
+}
 
 export default class ForkingStore {
   graph = null;
@@ -198,7 +198,7 @@ export default class ForkingStore {
       let url;
       try {
         url = new URL( graph );
-      } catch(e) { /* this may happen */ };
+      } catch(e) { /* this may happen */ }
 
       if( url
           && ( url.href.startsWith( `${BASE_GRAPH_STRING}/graphs/add` )
@@ -237,7 +237,7 @@ export default class ForkingStore {
     baseContent.forEach( (statement) => this.graph.add( statement ) );
     // remove stuff
     delContent.forEach( (statement) => {
-      try { this.graph.remove( statement ); } catch(e) {};
+      try { this.graph.remove( statement ); } catch(e) {/* */}
     } );
     // add stuff
     addContent.forEach( (statement) => this.graph.add( statement ) );
