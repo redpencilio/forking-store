@@ -14,7 +14,7 @@ export default class ForkingStore {
   graph = graph();
   fetcher = null;
   updater = null;
-  observers = {};
+  observers = new Map();
 
   constructor() {
     this.fetcher = new Fetcher(this.graph);
@@ -261,18 +261,18 @@ export default class ForkingStore {
    */
   registerObserver(observer, key) {
     key = key || observer;
-    this.observers[key] = observer;
+    this.observers.set(key, observer);
   }
 
   deregisterObserver(key) {
-    delete this.observers[key];
+    this.observers.delete(key);
   }
 
   /**
    * Removes all the registered observers. This can be used before destroying the form to prevent the observer callback looping.
    */
   clearObservers() {
-    this.observers = {};
+    this.observers.clear();
   }
 }
 
@@ -308,9 +308,9 @@ function statementInGraph(quad, graph) {
 }
 
 function informObservers(payload, forkingStore) {
-  for (const observerKey in forkingStore.observers) {
+  for (const [observerKey, observer] of forkingStore.observers.entries()) {
     try {
-      forkingStore.observers[observerKey](payload);
+      observer(payload);
     } catch (e) {
       console.error(
         `Something went wrong during the callback of observer ${observerKey}`,
