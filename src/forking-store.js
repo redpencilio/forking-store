@@ -10,62 +10,15 @@ import {
 
 const BASE_GRAPH_STRING = "http://mu.semte.ch/libraries/rdf-store";
 
-/**
- * Yields the graphs which contains additions.
- */
-function addGraphFor(graph) {
-  const graphValue = graph.termType == "NamedNode" ? graph.value : graph;
-  const base = `${BASE_GRAPH_STRING}/graphs/add`;
-  const graphQueryParam = encodeURIComponent(graphValue);
-  return namedNode(`${base}?for=${graphQueryParam}`);
-}
-
-/**
- * Yields the graph which contains removals.
- */
-function delGraphFor(graph) {
-  const graphValue = graph.termType == "NamedNode" ? graph.value : graph;
-  const base = `${BASE_GRAPH_STRING}/graphs/del`;
-  const graphQueryParam = encodeURIComponent(graphValue);
-  return namedNode(`${base}?for=${graphQueryParam}`);
-}
-
-function mergedGraphFor(graph) {
-  const graphValue = graph.termType == "NamedNode" ? graph.value : graph;
-  const base = `${BASE_GRAPH_STRING}/graphs/merged`;
-  const graphQueryParam = encodeURIComponent(graphValue);
-  return namedNode(`${base}?for=${graphQueryParam}`);
-}
-
-function statementInGraph(quad, graph) {
-  return new Statement(quad.subject, quad.predicate, quad.object, graph);
-}
-
-function informObservers(payload, forkingStore) {
-  for (const observerKey in forkingStore.observers) {
-    try {
-      forkingStore.observers[observerKey](payload);
-    } catch (e) {
-      console.error(
-        `Something went wrong during the callback of observer ${observerKey}`,
-      );
-      console.error(e);
-    }
-  }
-}
-
 export default class ForkingStore {
-  graph = null;
+  graph = graph();
   fetcher = null;
   updater = null;
-
-  observers = null;
+  observers = {};
 
   constructor() {
-    this.graph = graph();
     this.fetcher = new Fetcher(this.graph);
     this.updater = new UpdateManager(this.graph);
-    this.observers = {};
   }
 
   /**
@@ -314,6 +267,55 @@ export default class ForkingStore {
   deregisterObserver(key) {
     delete this.observers[key];
   }
+
+  /**
+   * Removes all the registered observers. This can be used before destroying the form to prevent the observer callback looping.
+   */
+  clearObservers() {
+    this.observers = {};
+  }
 }
 
-export { addGraphFor, delGraphFor };
+/**
+ * Yields the graphs which contains additions.
+ */
+export function addGraphFor(graph) {
+  const graphValue = graph.termType == "NamedNode" ? graph.value : graph;
+  const base = `${BASE_GRAPH_STRING}/graphs/add`;
+  const graphQueryParam = encodeURIComponent(graphValue);
+  return namedNode(`${base}?for=${graphQueryParam}`);
+}
+
+/**
+ * Yields the graph which contains removals.
+ */
+export function delGraphFor(graph) {
+  const graphValue = graph.termType == "NamedNode" ? graph.value : graph;
+  const base = `${BASE_GRAPH_STRING}/graphs/del`;
+  const graphQueryParam = encodeURIComponent(graphValue);
+  return namedNode(`${base}?for=${graphQueryParam}`);
+}
+
+function mergedGraphFor(graph) {
+  const graphValue = graph.termType == "NamedNode" ? graph.value : graph;
+  const base = `${BASE_GRAPH_STRING}/graphs/merged`;
+  const graphQueryParam = encodeURIComponent(graphValue);
+  return namedNode(`${base}?for=${graphQueryParam}`);
+}
+
+function statementInGraph(quad, graph) {
+  return new Statement(quad.subject, quad.predicate, quad.object, graph);
+}
+
+function informObservers(payload, forkingStore) {
+  for (const observerKey in forkingStore.observers) {
+    try {
+      forkingStore.observers[observerKey](payload);
+    } catch (e) {
+      console.error(
+        `Something went wrong during the callback of observer ${observerKey}`,
+      );
+      console.error(e);
+    }
+  }
+}
