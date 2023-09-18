@@ -50,8 +50,8 @@ describe("ForkingStore", () => {
       const observerA = mock.fn();
       const observerB = mock.fn();
 
-      store.registerObserver(observerA, "observer-a");
-      store.registerObserver(observerB, "observer-b");
+      store.registerObserver(observerA);
+      store.registerObserver(observerB);
       assert.equal(observerA.mock.callCount(), 0);
       assert.equal(observerB.mock.callCount(), 0);
 
