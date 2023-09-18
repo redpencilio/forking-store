@@ -1,0 +1,16 @@
+pipeline:
+  install:
+    image: node:18
+    commands:
+      - npm ci
+  lint:
+    image: node:18
+    commands:
+      - npm run lint
+  test:
+    image: node:18
+    commands:
+      - npm test
+when:
+  event:
+    - pull_request
