@@ -8,6 +8,7 @@
     "require": "./dist/cjs/forking-store.cjs"
   },
   "scripts": {
+    "build": "babel ./src/forking-store.js -o ./dist/cjs/forking-store.cjs",
     "lint": "concurrently --group --prefix-colors auto \"npm:lint:*(!fix)\"",
     "lint:fix": "concurrently --group --prefix-colors auto \"npm:lint:*:fix\"",
     "lint:js": "eslint . --cache",
@@ -15,7 +16,7 @@
     "lint:format": "prettier --cache --check .",
     "lint:format:fix": "prettier --cache --write .",
     "prepare": "npm run build",
-    "build": "babel ./src/forking-store.js -o ./dist/cjs/forking-store.cjs",
+    "release": "release-it",
     "test": "node --test"
   },
   "author": "Sergey Andreev",
@@ -31,9 +32,15 @@
     "concurrently": "^8.2.1",
     "eslint": "^8.19.0",
     "eslint-plugin-n": "^16.1.0",
-    "prettier": "^3.0.3"
+    "prettier": "^3.0.3",
+    "release-it": "^16.1.5"
   },
   "repository": {
     "url": "https://github.com/redpencilio/forking-store.git"
+  },
+  "release-it": {
+    "npm": {
+      "publish": false
+    }
   }
 }
