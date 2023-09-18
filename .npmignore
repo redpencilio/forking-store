@@ -1,3 +1,10 @@
 babel.config.json
 .editorconfig
 .eslintrc.cjs
+.eslintcache
+.prettierignore
+.woodpecker/
+
+CHANGELOG.md
+
+/tests
