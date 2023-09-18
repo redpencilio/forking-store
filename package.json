@@ -11,7 +11,8 @@
     "lint": "eslint . --cache",
     "lint:fix": "eslint . --cache --fix",
     "prepare": "npm run build",
-    "build": "babel ./src/forking-store.js -o ./dist/cjs/forking-store.cjs"
+    "build": "babel ./src/forking-store.js -o ./dist/cjs/forking-store.cjs",
+    "test": "node --test"
   },
   "author": "Sergey Andreev",
   "license": "MIT",
