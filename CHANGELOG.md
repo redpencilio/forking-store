@@ -1,3 +1,8 @@
+## v2.1.1 (2023-09-19)
+
+#### :bug: Bug Fix
+* [#24](https://github.com/redpencilio/forking-store/pull/24) Fix a potential infinite loop in the observer system ([@Windvis](https://github.com/Windvis))
+
 ## v2.1.0 (2023-09-18)
 
 #### :rocket: Enhancement
