@@ -308,7 +308,7 @@ function statementInGraph(quad, graph) {
 }
 
 function informObservers(payload, forkingStore) {
-  for (const [observerKey, observer] of forkingStore.observers.entries()) {
+  for (const [observerKey, observer] of [...forkingStore.observers.entries()]) {
     try {
       observer(payload);
     } catch (e) {
