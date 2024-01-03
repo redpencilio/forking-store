@@ -45,6 +45,34 @@ describe("ForkingStore", () => {
       );
     });
 
+    test("store.addAll passes an object to the observer with the added triples under the `inserts` key", () => {
+      const store = new ForkingStore();
+      const observer = mock.fn();
+
+      store.registerObserver(observer);
+      assert.equal(observer.mock.callCount(), 0);
+
+      const inserts = [randomQuad(), randomQuad()];
+      store.addAll(inserts);
+
+      const call = observer.mock.calls.at(0);
+      assert.deepEqual(call.arguments.at(0), { inserts });
+    });
+
+    test("`store.removeStatements` passes an object to the observer with the added triples under the `deletes` key", () => {
+      const store = new ForkingStore();
+      const observer = mock.fn();
+
+      store.registerObserver(observer);
+      assert.equal(observer.mock.callCount(), 0);
+
+      const deletes = [randomQuad(), randomQuad()];
+      store.removeStatements(deletes);
+
+      const call = observer.mock.calls.at(0);
+      assert.deepEqual(call.arguments.at(0), { deletes });
+    });
+
     test("`clearObservers` removes all registered observers", () => {
       const store = new ForkingStore();
       const observerA = mock.fn();
