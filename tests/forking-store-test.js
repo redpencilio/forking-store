@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import test, { describe, mock } from "node:test";
-import { namedNode, quad } from "rdflib";
+import { namedNode } from "rdflib";
 
 import ForkingStore from "../src/forking-store.js";
 import { waitForIdleStore } from "./helpers/wait-for-idle-store.js";
@@ -134,10 +134,10 @@ describe("ForkingStore", () => {
 });
 
 function randomQuad() {
-  return quad(
-    namedNode(`http://subject/${randomUUID()}`),
-    namedNode(`http://predicate/${randomUUID()}`),
-    `literal-${randomUUID()}`,
-    namedNode(`http://graph/${randomUUID()}`),
-  );
+  return {
+    subject: namedNode(`http://subject/${randomUUID()}`),
+    predicate: namedNode(`http://predicate/${randomUUID()}`),
+    object: `literal-${randomUUID()}`,
+    graph: namedNode(`http://graph/${randomUUID()}`),
+  };
 }
