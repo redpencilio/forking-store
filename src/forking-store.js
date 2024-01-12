@@ -6,6 +6,8 @@ import {
   UpdateManager,
   namedNode,
   Statement,
+  Literal,
+  quad,
 } from "rdflib";
 
 const BASE_GRAPH_STRING = "http://mu.semte.ch/libraries/rdf-store";
@@ -268,27 +270,34 @@ export default class ForkingStore {
   }
 
   #handleBatchedStatements(statements) {
-    // TODO: we can probably dedupe the inserts and deletes so only actual changes are handled
-    for (const ins of statements.inserts) {
-      this.graph.add(statementInGraph(ins, addGraphFor(ins.graph)));
-      try {
-        // NOTE why do we try removing the statement after adding it?
-        this.graph.remove(statementInGraph(ins, delGraphFor(ins.graph)));
-      } catch (e) {
-        // this is okay!  the statement may not exist
-      }
-    }
+    const dedupedStatements = removeRendundantChanges(
+      statements.inserts,
+      statements.deletes,
+    );
+    const { inserts, deletes } = dedupedStatements;
 
-    for (const del of statements.deletes) {
-      this.graph.add(statementInGraph(del, delGraphFor(del.graph)));
-      try {
-        this.graph.remove(statementInGraph(del, addGraphFor(del.graph)));
-      } catch (e) {
-        // this is okay!  the statement may not exist
+    if (inserts.length > 0 || deletes.length > 0) {
+      for (const ins of inserts) {
+        this.graph.add(statementInGraph(ins, addGraphFor(ins.graph)));
+        try {
+          // NOTE why do we try removing the statement after adding it?
+          this.graph.remove(statementInGraph(ins, delGraphFor(ins.graph)));
+        } catch (e) {
+          // this is okay!  the statement may not exist
+        }
       }
-    }
 
-    informObservers(statements, this);
+      for (const del of deletes) {
+        this.graph.add(statementInGraph(del, delGraphFor(del.graph)));
+        try {
+          this.graph.remove(statementInGraph(del, addGraphFor(del.graph)));
+        } catch (e) {
+          // this is okay!  the statement may not exist
+        }
+      }
+
+      informObservers(dedupedStatements, this);
+    }
   }
 }
 
@@ -377,4 +386,55 @@ class NotifyObserverBatcher {
     this.#pendingDataChanges.inserts.push(...inserts);
     this.#pendingDataChanges.deletes.push(...deletes);
   }
+}
+
+/**
+ * @typedef {Object} QuadLike - regular object with the same properties as Rdflib's BaseQuad type: https://github.com/linkeddata/rdflib.js/blob/6ab4f04a089f271af31d04c6242197cf32f3a333/src/tf-types.ts#L44
+ * @property {import("rdflib").NamedNode} subject - a string property of SpecialType
+ * @property {import("rdflib").NamedNode} predicate - a number property of SpecialType
+ * @property {import("rdflib").Literal | string} object - an optional number property of SpecialType
+ * @property {import("rdflib").NamedNode} graph - an optional number property of SpecialType
+ */
+
+/**
+ * Removes statements that appear in both the inserts and deletes arrays
+ *
+ * @param {QuadLike[]} inserts
+ * @param {QuadLike[]} deletes
+ * @returns {{ inserts: QuadLike[], deletes: QuadLike[] }}
+ */
+function removeRendundantChanges(inserts, deletes) {
+  return {
+    inserts: inserts.filter((insert) => {
+      return !deletes.some((del) => {
+        console.log("del", del, "insert", insert);
+        return areQuadsEqual(insert, del);
+      });
+    }),
+    deletes: deletes.filter((del) => {
+      return !inserts.some((insert) => {
+        return areQuadsEqual(insert, del);
+      });
+    }),
+  };
+}
+
+/**
+ *
+ * @param {QuadLike} quadA
+ * @param {QuadLike} quadB
+ * @returns {boolean}
+ */
+function areQuadsEqual(quadA, quadB) {
+  // const equal = quad(quadA).equals(quad(quadB));
+  const equal =
+    quadA.subject.value === quadB.subject.value &&
+    quadA.predicate.value == quadB.predicate.value &&
+    // We're not consistently using literals in the form-fields addon and helper package, so we force the conversion
+    Literal.fromValue(quadA.object).equals(Literal.fromValue(quadB.object)) &&
+    quadA.graph.value === quadB.graph.value;
+
+  console.log("comparing", quadA, quadB, equal);
+
+  return equal;
 }

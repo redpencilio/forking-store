@@ -109,6 +109,45 @@ describe("ForkingStore", () => {
       assert.deepEqual(call.arguments.at(0), { inserts, deletes: [] });
     });
 
+    test("redundant data changes are removed", async () => {
+      const store = new ForkingStore();
+      const observer = mock.fn();
+
+      store.registerObserver(observer);
+      assert.equal(observer.mock.callCount(), 0);
+
+      const redundantQuad = randomQuad();
+      let inserts = [redundantQuad];
+      store.addAll(inserts);
+
+      let deletes = [redundantQuad];
+      store.removeStatements(deletes);
+
+      await waitForIdleStore(store);
+
+      assert.equal(
+        observer.mock.callCount(),
+        0,
+        "The observers aren't triggered if there are no actual changes",
+      );
+
+      const quad = randomQuad();
+      inserts = [redundantQuad, quad];
+      store.addAll(inserts);
+
+      deletes = [redundantQuad];
+      store.removeStatements(deletes);
+      await waitForIdleStore(store);
+      assert.equal(observer.mock.callCount(), 1);
+
+      let call = observer.mock.calls.at(0);
+      assert.deepEqual(
+        call.arguments.at(0),
+        { inserts: [quad], deletes: [] },
+        "Only the actual changes are returned",
+      );
+    });
+
     test("`clearObservers` removes all registered observers", async () => {
       const store = new ForkingStore();
       const observerA = mock.fn();
