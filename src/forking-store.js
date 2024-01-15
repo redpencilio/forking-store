@@ -15,10 +15,19 @@ export default class ForkingStore {
   fetcher = null;
   updater = null;
   observers = new Map();
+  #callbackBatcher = null;
 
   constructor() {
     this.fetcher = new Fetcher(this.graph);
     this.updater = new UpdateManager(this.graph);
+    this.#callbackBatcher = new NotifyObserverBatcher((data) => {
+      this.#handleBatchedStatements(data);
+    });
+  }
+
+  // Private, only to be used by the test helper
+  get _isIdle() {
+    return this.#callbackBatcher.isIdle;
   }
 
   /**
@@ -126,28 +135,11 @@ export default class ForkingStore {
   }
 
   addAll(inserts) {
-    for (const ins of inserts) {
-      this.graph.add(statementInGraph(ins, addGraphFor(ins.graph)));
-      try {
-        // NOTE why do we try removing the statement after adding it?
-        this.graph.remove(statementInGraph(ins, delGraphFor(ins.graph)));
-      } catch (e) {
-        // this is okay!  the statement may not exist
-      }
-    }
-    informObservers({ inserts }, this);
+    this.#callbackBatcher.addData({ inserts });
   }
 
   removeStatements(deletes) {
-    for (const del of deletes) {
-      this.graph.add(statementInGraph(del, delGraphFor(del.graph)));
-      try {
-        this.graph.remove(statementInGraph(del, addGraphFor(del.graph)));
-      } catch (e) {
-        // this is okay!  the statement may not exist
-      }
-    }
-    informObservers({ deletes }, this);
+    this.#callbackBatcher.addData({ deletes });
   }
 
   removeMatches(subject, predicate, object, graph) {
@@ -274,6 +266,30 @@ export default class ForkingStore {
   clearObservers() {
     this.observers.clear();
   }
+
+  #handleBatchedStatements(statements) {
+    // TODO: we can probably dedupe the inserts and deletes so only actual changes are handled
+    for (const ins of statements.inserts) {
+      this.graph.add(statementInGraph(ins, addGraphFor(ins.graph)));
+      try {
+        // NOTE why do we try removing the statement after adding it?
+        this.graph.remove(statementInGraph(ins, delGraphFor(ins.graph)));
+      } catch (e) {
+        // this is okay!  the statement may not exist
+      }
+    }
+
+    for (const del of statements.deletes) {
+      this.graph.add(statementInGraph(del, delGraphFor(del.graph)));
+      try {
+        this.graph.remove(statementInGraph(del, addGraphFor(del.graph)));
+      } catch (e) {
+        // this is okay!  the statement may not exist
+      }
+    }
+
+    informObservers(statements, this);
+  }
 }
 
 /**
@@ -317,5 +333,48 @@ function informObservers(payload, forkingStore) {
       );
       console.error(e);
     }
+  }
+}
+
+/**
+ * This class is used to batch multiple data mutations into a single callback.
+ * Some forms can cause a lot of small data changes which all would trigger a new observer callback.
+ * Grouping them into a single call can improve performance and allows us to remove redundant changes.
+ */
+class NotifyObserverBatcher {
+  #batchTimeoutId;
+  #dataHandler;
+  #pendingDataChanges;
+
+  constructor(dataHandler) {
+    this.#setup();
+    this.#dataHandler = dataHandler;
+  }
+
+  // Used by the test helper
+  get isIdle() {
+    return !this.#batchTimeoutId;
+  }
+
+  #setup() {
+    this.#pendingDataChanges = { inserts: [], deletes: [] };
+    this.#batchTimeoutId = null;
+  }
+
+  #ensureBatch() {
+    if (!this.#batchTimeoutId) {
+      // We use a timeout delay of 0 so the callback runs as soon as possible while still waiting for all synchronous data changes
+      this.#batchTimeoutId = setTimeout(() => {
+        this.#dataHandler(this.#pendingDataChanges);
+        this.#setup();
+      });
+    }
+  }
+
+  addData({ inserts = [], deletes = [] }) {
+    this.#ensureBatch();
+
+    this.#pendingDataChanges.inserts.push(...inserts);
+    this.#pendingDataChanges.deletes.push(...deletes);
   }
 }
