@@ -21,7 +21,7 @@ export default class ForkingStore {
     this.fetcher = new Fetcher(this.graph);
     this.updater = new UpdateManager(this.graph);
     this.#callbackBatcher = new NotifyObserverBatcher((data) => {
-      this.#handleBatchedStatements(data);
+      informObservers(data, this);
     });
   }
 
@@ -134,11 +134,32 @@ export default class ForkingStore {
     }
   }
 
+  /** @param {Statement[]} inserts */
   addAll(inserts) {
+    for (const ins of inserts) {
+      this.graph.add(statementInGraph(ins, addGraphFor(ins.graph)));
+      try {
+        // NOTE why do we try removing the statement after adding it?
+        this.graph.remove(statementInGraph(ins, delGraphFor(ins.graph)));
+      } catch (e) {
+        // this is okay!  the statement may not exist
+      }
+    }
+
     this.#callbackBatcher.addData({ inserts });
   }
 
+  /** @param {Statement[]} deletes */
   removeStatements(deletes) {
+    for (const del of deletes) {
+      this.graph.add(statementInGraph(del, delGraphFor(del.graph)));
+      try {
+        this.graph.remove(statementInGraph(del, addGraphFor(del.graph)));
+      } catch (e) {
+        // this is okay!  the statement may not exist
+      }
+    }
+
     this.#callbackBatcher.addData({ deletes });
   }
 
@@ -266,30 +287,6 @@ export default class ForkingStore {
   clearObservers() {
     this.observers.clear();
   }
-
-  #handleBatchedStatements(statements) {
-    // TODO: we can probably dedupe the inserts and deletes so only actual changes are handled
-    for (const ins of statements.inserts) {
-      this.graph.add(statementInGraph(ins, addGraphFor(ins.graph)));
-      try {
-        // NOTE why do we try removing the statement after adding it?
-        this.graph.remove(statementInGraph(ins, delGraphFor(ins.graph)));
-      } catch (e) {
-        // this is okay!  the statement may not exist
-      }
-    }
-
-    for (const del of statements.deletes) {
-      this.graph.add(statementInGraph(del, delGraphFor(del.graph)));
-      try {
-        this.graph.remove(statementInGraph(del, addGraphFor(del.graph)));
-      } catch (e) {
-        // this is okay!  the statement may not exist
-      }
-    }
-
-    informObservers(statements, this);
-  }
 }
 
 /**
@@ -346,6 +343,9 @@ class NotifyObserverBatcher {
   #dataHandler;
   #pendingDataChanges;
 
+  /**
+   * @param {(data: { inserts: Statement[], deletes: Statement[]}) => void} dataHandler
+   */
   constructor(dataHandler) {
     this.#setup();
     this.#dataHandler = dataHandler;

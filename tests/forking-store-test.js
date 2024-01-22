@@ -7,6 +7,35 @@ import ForkingStore from "../src/forking-store.js";
 import { waitForIdleStore } from "./helpers/wait-for-idle-store.js";
 
 describe("ForkingStore", () => {
+  describe("addAll", () => {
+    test("addAll inserts statements in the store", async () => {
+      const store = new ForkingStore();
+
+      const testQuad = randomQuad();
+      let matches = store.match(
+        testQuad.subject,
+        testQuad.predicate,
+        testQuad.object,
+        testQuad.graph,
+      );
+
+      assert.equal(
+        matches.length,
+        0,
+        "The data hasn't been inserted in the store yet",
+      );
+
+      store.addAll([testQuad]);
+      matches = store.match(
+        testQuad.subject,
+        testQuad.predicate,
+        testQuad.object,
+        testQuad.graph,
+      );
+      assert.equal(matches.length, 1, "The data was inserted in the store");
+    });
+  });
+
   describe("observers", () => {
     test("observers can be used to receive store updates", async () => {
       const store = new ForkingStore();
