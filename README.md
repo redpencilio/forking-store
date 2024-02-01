@@ -79,7 +79,7 @@ Returns the wildcard value of a triple matching the pattern `subject`, `predicat
 One term of the triple can be set to `null` or `undefined`, serving as a wildcard. They will now match any value, e.g. `any(null, FOAF('knows'), PERSON('John'), null)` will match any person that knows John and `any(me, FOAF('knows'), null, null)` will match any person that I know. We can optionally specify the graph, e.g. `any(null, FOAF('knows'), PERSON('John'), profile)` so that only the people that know John according to my profile are returned.
 
 ```
-any(subject: any, predicate: any, object: any, graph: string | NamedNode): string | boolean | undefined
+any(subject: Quad_Subject | null, predicate: Quad_Predicate | null, object: Quad_Object | null, graph: string | NamedNode): NamedNode | boolean | undefined
 ```
 
 #### addAll
