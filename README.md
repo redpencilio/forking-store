@@ -81,7 +81,7 @@ parse(content: string, graph: string | NamedNode, format?: string): void
 
 #### match
 
-Returns the statements that match the pattern `subject`, `predicate`, `object` and `graph`. 
+Returns the statements that match the pattern `subject`, `predicate`, `object` and `graph`.
 
 One or multiple of the terms of the triple can be set to `null` or `undefined`, turning them into wildcards. They will now match any value, e.g. `match(null, FOAF('knows'), null, null)` will match any person that knows someone. If we want to be more restrictive, we can say: `match(null, FOAF('knows'), PERSON('John'), null)` so that only the people that know John are returned. We can optionally specify the graph, e.g. `match(null, FOAF('knows'), PERSON('John'), profile)` so that only the people that know John according to my profile are returned.
 
