@@ -1,7 +1,8 @@
 ## v2.2.0 (2024-01-22)
 
 #### :rocket: Enhancement
-* [#25](https://github.com/redpencilio/forking-store/pull/25) Batch observer calls ([@Windvis](https://github.com/Windvis))
+
+- [#25](https://github.com/redpencilio/forking-store/pull/25) Batch observer calls ([@Windvis](https://github.com/Windvis))
 
 ## v2.1.1 (2023-09-19)
 
