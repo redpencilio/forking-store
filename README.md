@@ -6,23 +6,6 @@ Forking store that works with both front-end js(ember) and back-end js(node with
 
 This library is built on top of [rdflib.js](https://github.com/linkeddata/rdflib.js)
 
-## development
-
-Clone the repo.
-
-Edit ./forking-store.js and link/install with npm inside your project.
-
-When it gets included in your project it should automatically build the browser and node versions.
-
-## Releasing
-
-1. run `npm run release`
-2. follow the release-it prompts
-   - when release-it asks to commit, you can update the changelog and add it to the staged changes so it will be part of the same release commit.
-   - you can either manually edit the changelog or use lerna-changelog to generate it based on the merged PRs (`GITHUB_AUTH=your-token npx lerna-changelog`).
-3. release-it pushes the tag to GitHub
-4. Woodpecker will publish the new version to npm
-
 ## API
 
 ### ForkingStore Class
@@ -93,7 +76,7 @@ match(subject: Quad_Subject | null, predicate: Quad_Predicate | null, object: Qu
 
 Returns the wildcard value of a triple matching the pattern `subject`, `predicate`, `object` and `graph`, or undefined if no match was found. If all arguments are specified and a match is found, true is returned.
 
-One term of the triple can be set to `null` or `undefined`, serving as a wildcard. They will now match any value, e.g. `match(null, FOAF('knows'), null, null)` will match any person that knows someone. If we want to be more restrictive, we can say: `match(null, FOAF('knows'), PERSON('John'), null)` so that only the people that know John are returned. We can optionally specify the graph, e.g. `match(null, FOAF('knows'), PERSON('John'), profile)` so that only the people that know John according to my profile are returned.
+One term of the triple can be set to `null` or `undefined`, serving as a wildcard. They will now match any value, e.g. `any(null, FOAF('knows'), PERSON('John'), null)` will match any person that knows John and `any(me, FOAF('knows'), null, null)` will match any person that I know. We can optionally specify the graph, e.g. `any(null, FOAF('knows'), PERSON('John'), profile)` so that only the people that know John according to my profile are returned.
 
 ```
 any(subject: any, predicate: any, object: any, graph: string | NamedNode): string | boolean | undefined
@@ -101,7 +84,7 @@ any(subject: any, predicate: any, object: any, graph: string | NamedNode): strin
 
 #### addAll
 
-Adds all given `insterts` statements to the store.
+Adds all given `inserts` statements to the store.
 
 ```
 addAll(inserts: Statement[]): void
@@ -122,3 +105,20 @@ Deletes the statements matching the pattern `subject`, `predicate`, `object` and
 ```
 removeMatches(subject: Quad_Subject | null, predicate: Quad_Predicate | null, object: Quad_Object | null, graph: Quad_Graph | null): void
 ```
+
+## Development
+
+Clone the repo.
+
+Edit ./forking-store.js and link/install with npm inside your project.
+
+When it gets included in your project it should automatically build the browser and node versions.
+
+## Releasing
+
+1. run `npm run release`
+2. follow the release-it prompts
+   - when release-it asks to commit, you can update the changelog and add it to the staged changes so it will be part of the same release commit.
+   - you can either manually edit the changelog or use lerna-changelog to generate it based on the merged PRs (`GITHUB_AUTH=your-token npx lerna-changelog`).
+3. release-it pushes the tag to GitHub
+4. Woodpecker will publish the new version to npm
