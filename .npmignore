@@ -1,9 +1,10 @@
-babel.config.json
 .editorconfig
 .eslintrc.cjs
 .eslintcache
 .prettierignore
 .woodpecker/
+tsconfig.json
+tsconfig.cjs.json
 
 CHANGELOG.md
 
