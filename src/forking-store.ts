@@ -8,14 +8,10 @@ import {
   Statement,
   Node,
   NamedNode,
+  isNamedNode
 } from "rdflib";
-import {
-  Quad,
-  Quad_Graph,
-  Quad_Object,
-  Quad_Predicate,
-  Quad_Subject,
-} from "rdflib/lib/tf-types";
+import { Quad_Subject, Quad_Predicate, Quad_Object, Quad_Graph, Quad } from "rdflib/lib/tf-types.js";
+import { GraphType } from "rdflib/lib/types.js";
 
 const BASE_GRAPH_STRING = "http://mu.semte.ch/libraries/rdf-store";
 
@@ -55,7 +51,7 @@ export default class ForkingStore {
     removals: string,
     format: string,
   ) {
-    const graphValue = graph.termType == "NamedNode" ? graph.value : graph;
+    const graphValue = isNamedNode(graph) ? graph.value : graph;
     parse(content, this.graph, graphValue, format);
     if (additions) {
       parse(additions, this.graph, addGraphFor(graph).value, format);
@@ -80,8 +76,8 @@ export default class ForkingStore {
   /**
    * Parses content from a file into a specified graph.
    */
-  parse(content: string, graph: string | Node, format: string) {
-    const graphValue = graph.termType == "NamedNode" ? graph.value : graph;
+  parse(content: string, graph: NamedNode | string, format: string) {
+    const graphValue = isNamedNode(graph) ? graph.value : graph;
     parse(content, this.graph, graphValue, format);
   }
 
@@ -92,7 +88,7 @@ export default class ForkingStore {
     subject?: Quad_Subject | null,
     predicate?: Quad_Predicate | null,
     object?: Quad_Object | null,
-    graph?: Quad_Graph | null,
+    graph?: NamedNode | null,
   ) {
     if (graph) {
       const mainMatch = this.graph.match(subject, predicate, object, graph);
@@ -188,10 +184,10 @@ export default class ForkingStore {
   }
 
   removeMatches(
-    subject?: Quad_Subject,
-    predicate?: Quad_Predicate,
-    object?: Quad_Object,
-    graph?: Quad_Graph,
+    subject?: Quad_Subject | null,
+    predicate?: Quad_Predicate | null,
+    object?: Quad_Object | null,
+    graph?: Quad_Graph | null,
   ) {
     const matches = this.graph.match(subject, predicate, object, graph);
     this.graph.removeStatements(matches);
@@ -204,7 +200,7 @@ export default class ForkingStore {
   }
 
   changedGraphs() {
-    const forGraphs = new Set();
+    const forGraphs = new Set<string>();
     for (const graph of this.allGraphs()) {
       let url;
       try {
@@ -226,7 +222,7 @@ export default class ForkingStore {
     return [...forGraphs];
   }
 
-  mergedGraph(graph: Quad_Graph) {
+  mergedGraph(graph: NamedNode) {
     // recalculates the merged graph and returns the graph
 
     const mergedGraph = mergedGraphFor(graph);
@@ -261,7 +257,7 @@ export default class ForkingStore {
     return mergedGraph;
   }
 
-  async pushGraphChanges(graph) {
+  async pushGraphChanges(graph: NamedNode | string) {
     const deletes = this.match(null, null, null, delGraphFor(graph)).map(
       (statement) => statementInGraph(statement, graph),
     );
@@ -292,6 +288,8 @@ export default class ForkingStore {
    */
   update(deletes: Statement[], inserts: Statement[]) {
     return new Promise((resolve, reject) => {
+      // @ts-expect-error: I think this code is wrong, but don't want to change it to fix the types in case I break something.
+      // TODO: find out if this is used somewhere and remove it if it isn't.
       this.updater.update(deletes, inserts, resolve, reject);
     });
   }
@@ -324,8 +322,8 @@ export default class ForkingStore {
 /**
  * Yields the graphs which contains additions.
  */
-export function addGraphFor(graph: Quad_Graph | string) {
-  const graphValue = graph.termType == "NamedNode" ? graph.value : graph;
+export function addGraphFor(graph: NamedNode | string) {
+  const graphValue = isNamedNode(graph) ? graph.value : graph;
   const base = `${BASE_GRAPH_STRING}/graphs/add`;
   const graphQueryParam = encodeURIComponent(graphValue);
   return namedNode(`${base}?for=${graphQueryParam}`);
@@ -334,21 +332,21 @@ export function addGraphFor(graph: Quad_Graph | string) {
 /**
  * Yields the graph which contains removals.
  */
-export function delGraphFor(graph: Quad_Graph | string) {
-  const graphValue = graph.termType == "NamedNode" ? graph.value : graph;
+export function delGraphFor(graph: NamedNode | string) {
+  const graphValue = isNamedNode(graph) ? graph.value : graph;
   const base = `${BASE_GRAPH_STRING}/graphs/del`;
   const graphQueryParam = encodeURIComponent(graphValue);
   return namedNode(`${base}?for=${graphQueryParam}`);
 }
 
-function mergedGraphFor(graph: Quad_Graph | string) {
-  const graphValue = graph.termType == "NamedNode" ? graph.value : graph;
+function mergedGraphFor(graph: NamedNode | string) {
+  const graphValue = isNamedNode(graph) ? graph.value : graph;
   const base = `${BASE_GRAPH_STRING}/graphs/merged`;
   const graphQueryParam = encodeURIComponent(graphValue);
   return namedNode(`${base}?for=${graphQueryParam}`);
 }
 
-function statementInGraph(quad: Quad, graph: Quad_Graph) {
+function statementInGraph(quad: Statement, graph: GraphType) {
   return new Statement(quad.subject, quad.predicate, quad.object, graph);
 }
 
