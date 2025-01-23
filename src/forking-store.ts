@@ -6,12 +6,11 @@ import {
   UpdateManager,
   namedNode,
   Statement,
-  Node,
   NamedNode,
   isNamedNode
 } from "rdflib";
-import { Quad_Subject, Quad_Predicate, Quad_Object, Quad_Graph, Quad } from "rdflib/lib/tf-types.js";
-import { GraphType } from "rdflib/lib/types.js";
+import type { Quad_Subject, Quad_Predicate, Quad_Object, Quad_Graph, Quad } from "rdflib/lib/tf-types.js";
+import type { GraphType } from "rdflib/lib/types.js";
 
 const BASE_GRAPH_STRING = "http://mu.semte.ch/libraries/rdf-store";
 
