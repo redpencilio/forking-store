@@ -1,4 +1,4 @@
-pipeline:
+steps:
   install:
     image: node:18
     commands:
@@ -12,5 +12,4 @@ pipeline:
     commands:
       - npm test
 when:
-  event:
-    - pull_request
+  event: pull_request

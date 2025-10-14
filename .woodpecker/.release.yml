@@ -1,13 +1,13 @@
-pipeline:
-  install:
-    image: node:18
-    commands:
-      - npm ci
-  release:
-    image: plugins/npm
+steps:
+  build:
+    image: woodpeckerci/plugin-docker-buildx
     settings:
-      token:
-        from_secret: npm_access_token
+      repo: ${CI_REPO}
+      tags: "${CI_COMMIT_TAG##v}"
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
 when:
-  event: tag
-  tag: v*
+  - event: tag
+    ref: refs/tags/v*
