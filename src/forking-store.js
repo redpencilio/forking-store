@@ -12,7 +12,12 @@ const BASE_GRAPH_STRING = "http://mu.semte.ch/libraries/rdf-store";
 
 export default class ForkingStore {
   internalStore = new Store();
-  graph = this.internalStore; // Deprecated, remove in next major
+
+  /**
+   * @deprecated Use `internalStore` instead. Will be removed in the next major release.
+   */
+  graph = this.internalStore;
+
   fetcher = null;
   updater = null;
   observers = new Map();
@@ -43,10 +48,20 @@ export default class ForkingStore {
     const graphValue = graph.termType == "NamedNode" ? graph.value : graph;
     parse(content, this.internalStore, graphValue, format);
     if (additions) {
-      parse(additions, this.internalStore, additionGraphFor(graph).value, format);
+      parse(
+        additions,
+        this.internalStore,
+        additionGraphFor(graph).value,
+        format,
+      );
     }
     if (removals) {
-      parse(removals, this.internalStore, deletionGraphFor(graph).value, format);
+      parse(
+        removals,
+        this.internalStore,
+        deletionGraphFor(graph).value,
+        format,
+      );
     }
   }
 
@@ -75,7 +90,12 @@ export default class ForkingStore {
    */
   match(subject, predicate, object, graph) {
     if (graph) {
-      const mainMatch = this.internalStore.match(subject, predicate, object, graph);
+      const mainMatch = this.internalStore.match(
+        subject,
+        predicate,
+        object,
+        graph,
+      );
       const addMatch = this.internalStore.match(
         subject,
         predicate,
@@ -138,10 +158,14 @@ export default class ForkingStore {
   /** @param {Statement[]} inserts */
   addAll(inserts) {
     for (const ins of inserts) {
-      this.internalStore.add(statementInGraph(ins, additionGraphFor(ins.graph)));
+      this.internalStore.add(
+        statementInGraph(ins, additionGraphFor(ins.graph)),
+      );
       try {
         // If the statement was in the deletion graph, remove it from there
-        this.internalStore.remove(statementInGraph(ins, deletionGraphFor(ins.graph)));
+        this.internalStore.remove(
+          statementInGraph(ins, deletionGraphFor(ins.graph)),
+        );
       } catch (e) {
         // this is okay!  the statement may not exist
       }
@@ -153,10 +177,14 @@ export default class ForkingStore {
   /** @param {Statement[]} deletes */
   removeStatements(deletes) {
     for (const del of deletes) {
-      this.internalStore.add(statementInGraph(del, deletionGraphFor(del.graph)));
+      this.internalStore.add(
+        statementInGraph(del, deletionGraphFor(del.graph)),
+      );
       try {
         // If the statement was in the addition graph, remove it from there
-        this.internalStore.remove(statementInGraph(del, additionGraphFor(del.graph)));
+        this.internalStore.remove(
+          statementInGraph(del, additionGraphFor(del.graph)),
+        );
       } catch (e) {
         // this is okay!  the statement may not exist
       }
@@ -171,7 +199,9 @@ export default class ForkingStore {
   }
 
   allGraphs() {
-    const graphStatements = this.internalStore.match().map(({ graph }) => graph.value);
+    const graphStatements = this.internalStore
+      .match()
+      .map(({ graph }) => graph.value);
 
     return new Set(graphStatements);
   }
