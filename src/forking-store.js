@@ -322,7 +322,7 @@ export default class ForkingStore {
 }
 
 /**
- * @deprecated "add" could refer to the verb or the noun in this case, confusing! 
+ * @deprecated "add" could refer to the verb or the noun in this case, confusing!
  * Use the {@link additionGraphFor} method
  */
 export function addGraphFor(graph) {
@@ -340,11 +340,11 @@ export function additionGraphFor(graph) {
 }
 
 /**
- * @deprecated "del" could refer to the verb or the noun in this case, confusing! 
+ * @deprecated "del" could refer to the verb or the noun in this case, confusing!
  * Use the {@link additionGraphFor} method
  */
 export function delGraphFor(graph) {
-  return deletionGraphFor(graph)
+  return deletionGraphFor(graph);
 }
 
 /**
