@@ -138,7 +138,12 @@ export default class ForkingStore {
   /** @param {Statement[]} inserts */
   addAll(inserts) {
     for (const ins of inserts) {
-      this.internalStore.add(statementInGraph(ins, addGraphFor(ins.graph)));
+      // Only add if the graph does not have it already
+      if (!this.internalStore.holdsStatement(ins)) {
+        this.internalStore.add(
+          statementInGraph(ins, additionGraphFor(ins.graph)),
+        );
+      }
       try {
         // If the statement was in the deletion graph, remove it from there
         this.internalStore.remove(statementInGraph(ins, delGraphFor(ins.graph)));
@@ -153,7 +158,11 @@ export default class ForkingStore {
   /** @param {Statement[]} deletes */
   removeStatements(deletes) {
     for (const del of deletes) {
-      this.internalStore.add(statementInGraph(del, delGraphFor(del.graph)));
+      if (this.internalStore.holdsStatement(del)) {
+        this.internalStore.add(
+          statementInGraph(del, deletionGraphFor(del.graph)),
+        );
+      }
       try {
         // If the statement was in the addition graph, remove it from there
         this.internalStore.remove(statementInGraph(del, addGraphFor(del.graph)));
@@ -197,6 +206,10 @@ export default class ForkingStore {
     }
 
     return [...forGraphs];
+  }
+
+  isDirty() {
+    return this.changedGraphs().length > 0;
   }
 
   mergedGraph(graph) {
@@ -290,9 +303,17 @@ export default class ForkingStore {
 }
 
 /**
- * Yields the graphs which contains additions.
+ * @deprecated "add" could refer to the verb or the noun in this case, confusing!
+ * Use the {@link additionGraphFor} method
  */
 export function addGraphFor(graph) {
+  return additionGraphFor(graph);
+}
+
+/**
+ * Yields the graphs which contains additions.
+ */
+export function additionGraphFor(graph) {
   const graphValue = graph.termType == "NamedNode" ? graph.value : graph;
   const base = `${BASE_GRAPH_STRING}/graphs/add`;
   const graphQueryParam = encodeURIComponent(graphValue);
@@ -300,9 +321,17 @@ export function addGraphFor(graph) {
 }
 
 /**
- * Yields the graph which contains removals.
+ * @deprecated "del" could refer to the verb or the noun in this case, confusing!
+ * Use the {@link additionGraphFor} method
  */
 export function delGraphFor(graph) {
+  return deletionGraphFor(graph);
+}
+
+/**
+ * Yields the graph which contains removals.
+ */
+export function deletionGraphFor(graph) {
   const graphValue = graph.termType == "NamedNode" ? graph.value : graph;
   const base = `${BASE_GRAPH_STRING}/graphs/del`;
   const graphQueryParam = encodeURIComponent(graphValue);
