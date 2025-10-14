@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import test, { describe, mock } from "node:test";
-import { namedNode, quad, Statement } from "rdflib";
+import { namedNode, quad } from "rdflib";
 
 import ForkingStore from "../src/forking-store.js";
 import { waitForIdleStore } from "./helpers/wait-for-idle-store.js";
