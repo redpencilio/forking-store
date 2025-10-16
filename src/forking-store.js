@@ -14,7 +14,7 @@ export default class ForkingStore {
   #internalStore = new Store();
 
   /**
-   * @deprecated Use `internalStore` instead. Will be removed in the next major release.
+   * @deprecated Will be removed in the next major release.
    */
   graph = this.#internalStore;
 
