@@ -234,7 +234,7 @@ export default class ForkingStore {
     return [...forGraphs];
   }
 
-  isDirty() {
+  get hasChanges() {
     return this.changedGraphs().length > 0;
   }
 
@@ -404,7 +404,7 @@ class NotifyObserverBatcher {
    * @param {(data: { inserts: Statement[], deletes: Statement[]}) => void} dataHandler
    */
   constructor(dataHandler) {
-    this.#setup();
+    this.#reset();
     this.#dataHandler = dataHandler;
   }
 
@@ -413,7 +413,7 @@ class NotifyObserverBatcher {
     return !this.#batchTimeoutId;
   }
 
-  #setup() {
+  #reset() {
     this.#pendingDataChanges = { inserts: [], deletes: [] };
     this.#batchTimeoutId = null;
   }
@@ -423,7 +423,7 @@ class NotifyObserverBatcher {
       // We use a timeout delay of 0 so the callback runs as soon as possible while still waiting for all synchronous data changes
       this.#batchTimeoutId = setTimeout(() => {
         this.#dataHandler(this.#pendingDataChanges);
-        this.#setup();
+        this.#reset();
       });
     }
   }
