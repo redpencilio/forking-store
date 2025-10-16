@@ -157,6 +157,9 @@ export default class ForkingStore {
 
   /** @param {Statement[]} inserts */
   addAll(inserts) {
+    // TODO: If there is no real change, the observers should not be notified
+    // E. g. if a quad is added that was already in the graph and not in
+    // the removed set
     for (const ins of inserts) {
       // Only add if the graph does not have it already
       if (!this.internalStore.holdsStatement(ins)) {
@@ -179,6 +182,9 @@ export default class ForkingStore {
 
   /** @param {Statement[]} deletes */
   removeStatements(deletes) {
+    // TODO: If there is no real change, the observers should not be notified
+    // E. g. if a quad is removed that was not in the graph and not in
+    // the added set
     for (const del of deletes) {
       if (this.internalStore.holdsStatement(del)) {
         this.internalStore.add(
@@ -394,6 +400,11 @@ function informObservers(payload, forkingStore) {
  * This class is used to batch multiple data mutations into a single callback.
  * Some forms can cause a lot of small data changes which all would trigger a new observer callback.
  * Grouping them into a single call can improve performance and allows us to remove redundant changes.
+ * 
+ * TODO: Currently the inserts and deletes object received from the notifier is not very helpful
+ * because we do not know the order of operations, we could improve this by keeping a list
+ * This will also enable us to do some optimizations before sending the notification.
+ * We could clean up the batched operations to remove null operations (add after remove of the same quad and vice-versa)
  */
 class NotifyObserverBatcher {
   #batchTimeoutId;
