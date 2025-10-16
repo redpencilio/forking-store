@@ -1,5 +1,5 @@
 import {
-  graph,
+  Store,
   parse,
   serialize,
   Fetcher,
@@ -11,15 +11,21 @@ import {
 const BASE_GRAPH_STRING = "http://mu.semte.ch/libraries/rdf-store";
 
 export default class ForkingStore {
-  graph = graph();
+  #internalStore = new Store();
+
+  /**
+   * @deprecated Will be removed in the next major release.
+   */
+  graph = this.#internalStore;
+
   fetcher = null;
   updater = null;
   observers = new Map();
   #callbackBatcher = null;
 
   constructor() {
-    this.fetcher = new Fetcher(this.graph);
-    this.updater = new UpdateManager(this.graph);
+    this.fetcher = new Fetcher(this.#internalStore);
+    this.updater = new UpdateManager(this.#internalStore);
     this.#callbackBatcher = new NotifyObserverBatcher((data) => {
       informObservers(data, this);
     });
@@ -40,25 +46,39 @@ export default class ForkingStore {
 
   loadDataWithAddAndDelGraph(content, graph, additions, removals, format) {
     const graphValue = graph.termType == "NamedNode" ? graph.value : graph;
-    parse(content, this.graph, graphValue, format);
+    parse(content, this.#internalStore, graphValue, format);
     if (additions) {
-      parse(additions, this.graph, addGraphFor(graph).value, format);
+      parse(
+        additions,
+        this.#internalStore,
+        additionGraphFor(graph).value,
+        format,
+      );
     }
     if (removals) {
-      parse(removals, this.graph, delGraphFor(graph).value, format);
+      parse(
+        removals,
+        this.#internalStore,
+        deletionGraphFor(graph).value,
+        format,
+      );
     }
   }
 
   serializeDataWithAddAndDelGraph(graph, format = "text/turtle") {
     return {
-      graph: serialize(graph, this.graph, format),
-      additions: serialize(addGraphFor(graph), this.graph, format),
-      removals: serialize(delGraphFor(graph), this.graph, format),
+      graph: serialize(graph, this.#internalStore, format),
+      additions: serialize(
+        additionGraphFor(graph),
+        this.#internalStore,
+        format,
+      ),
+      removals: serialize(deletionGraphFor(graph), this.#internalStore, format),
     };
   }
 
   serializeDataMergedGraph(graph, format = "text/turtle") {
-    return serialize(this.mergedGraph(graph), this.graph, format);
+    return serialize(this.mergedGraph(graph), this.#internalStore, format);
   }
 
   /**
@@ -66,7 +86,7 @@ export default class ForkingStore {
    */
   parse(content, graph, format) {
     const graphValue = graph.termType == "NamedNode" ? graph.value : graph;
-    parse(content, this.graph, graphValue, format);
+    parse(content, this.#internalStore, graphValue, format);
   }
 
   /**
@@ -74,18 +94,23 @@ export default class ForkingStore {
    */
   match(subject, predicate, object, graph) {
     if (graph) {
-      const mainMatch = this.graph.match(subject, predicate, object, graph);
-      const addMatch = this.graph.match(
+      const mainMatch = this.#internalStore.match(
         subject,
         predicate,
         object,
-        addGraphFor(graph),
+        graph,
       );
-      const delMatch = this.graph.match(
+      const addMatch = this.#internalStore.match(
         subject,
         predicate,
         object,
-        delGraphFor(graph),
+        additionGraphFor(graph),
+      );
+      const delMatch = this.#internalStore.match(
+        subject,
+        predicate,
+        object,
+        deletionGraphFor(graph),
       );
       return [...mainMatch, ...addMatch]
         .filter((quad) => !delMatch.find((del) => this.equalTriples(del, quad))) // remove statments in delete graph
@@ -101,7 +126,7 @@ export default class ForkingStore {
       // TODO: this code path is normally unused in our cases,
       // implement it for debugging scenarios.
 
-      return this.graph.match(subject, predicate, object);
+      return this.#internalStore.match(subject, predicate, object);
     }
   }
 
@@ -137,10 +162,14 @@ export default class ForkingStore {
   /** @param {Statement[]} inserts */
   addAll(inserts) {
     for (const ins of inserts) {
-      this.graph.add(statementInGraph(ins, addGraphFor(ins.graph)));
+      this.#internalStore.add(
+        statementInGraph(ins, additionGraphFor(ins.graph)),
+      );
       try {
-        // NOTE why do we try removing the statement after adding it?
-        this.graph.remove(statementInGraph(ins, delGraphFor(ins.graph)));
+        // If the statement was in the deletion graph, remove it from there
+        this.#internalStore.remove(
+          statementInGraph(ins, deletionGraphFor(ins.graph)),
+        );
       } catch (e) {
         // this is okay!  the statement may not exist
       }
@@ -152,9 +181,14 @@ export default class ForkingStore {
   /** @param {Statement[]} deletes */
   removeStatements(deletes) {
     for (const del of deletes) {
-      this.graph.add(statementInGraph(del, delGraphFor(del.graph)));
+      this.#internalStore.add(
+        statementInGraph(del, deletionGraphFor(del.graph)),
+      );
       try {
-        this.graph.remove(statementInGraph(del, addGraphFor(del.graph)));
+        // If the statement was in the addition graph, remove it from there
+        this.#internalStore.remove(
+          statementInGraph(del, additionGraphFor(del.graph)),
+        );
       } catch (e) {
         // this is okay!  the statement may not exist
       }
@@ -164,12 +198,19 @@ export default class ForkingStore {
   }
 
   removeMatches(subject, predicate, object, graph) {
-    const matches = this.graph.match(subject, predicate, object, graph);
-    this.graph.removeStatements(matches);
+    const matches = this.#internalStore.match(
+      subject,
+      predicate,
+      object,
+      graph,
+    );
+    this.#internalStore.removeStatements(matches);
   }
 
   allGraphs() {
-    const graphStatements = this.graph.match().map(({ graph }) => graph.value);
+    const graphStatements = this.#internalStore
+      .match()
+      .map(({ graph }) => graph.value);
 
     return new Set(graphStatements);
   }
@@ -201,8 +242,8 @@ export default class ForkingStore {
     // recalculates the merged graph and returns the graph
 
     const mergedGraph = mergedGraphFor(graph);
-    const delSource = delGraphFor(graph);
-    const addSource = addGraphFor(graph);
+    const delSource = deletionGraphFor(graph);
+    const addSource = additionGraphFor(graph);
 
     const baseContent = this.match(null, null, null, graph).map((statement) =>
       statementInGraph(statement, mergedGraph),
@@ -215,37 +256,37 @@ export default class ForkingStore {
     );
 
     // clear the graph
-    this.graph.removeMatches(null, null, null, mergedGraph);
+    this.#internalStore.removeMatches(null, null, null, mergedGraph);
     // add baseContent
-    baseContent.forEach((statement) => this.graph.add(statement));
+    baseContent.forEach((statement) => this.#internalStore.add(statement));
     // remove stuff
     delContent.forEach((statement) => {
       try {
-        this.graph.remove(statement);
+        this.#internalStore.remove(statement);
       } catch (e) {
         /* */
       }
     });
     // add stuff
-    addContent.forEach((statement) => this.graph.add(statement));
+    addContent.forEach((statement) => this.#internalStore.add(statement));
 
     return mergedGraph;
   }
 
   async pushGraphChanges(graph) {
-    const deletes = this.match(null, null, null, delGraphFor(graph)).map(
+    const deletes = this.match(null, null, null, deletionGraphFor(graph)).map(
       (statement) => statementInGraph(statement, graph),
     );
 
-    const inserts = this.match(null, null, null, addGraphFor(graph)).map(
+    const inserts = this.match(null, null, null, additionGraphFor(graph)).map(
       (statement) => statementInGraph(statement, graph),
     );
 
     try {
       await this.update(deletes, inserts);
     } finally {
-      this.removeMatches(null, null, null, delGraphFor(graph));
-      this.removeMatches(null, null, null, addGraphFor(graph));
+      this.removeMatches(null, null, null, deletionGraphFor(graph));
+      this.removeMatches(null, null, null, additionGraphFor(graph));
     }
   }
 
@@ -290,9 +331,17 @@ export default class ForkingStore {
 }
 
 /**
- * Yields the graphs which contains additions.
+ * @deprecated "add" could refer to the verb or the noun in this case, confusing!
+ * Use the {@link additionGraphFor} method
  */
 export function addGraphFor(graph) {
+  return additionGraphFor(graph);
+}
+
+/**
+ * Yields the graphs which contains additions.
+ */
+export function additionGraphFor(graph) {
   const graphValue = graph.termType == "NamedNode" ? graph.value : graph;
   const base = `${BASE_GRAPH_STRING}/graphs/add`;
   const graphQueryParam = encodeURIComponent(graphValue);
@@ -300,9 +349,17 @@ export function addGraphFor(graph) {
 }
 
 /**
- * Yields the graph which contains removals.
+ * @deprecated "del" could refer to the verb or the noun in this case, confusing!
+ * Use the {@link additionGraphFor} method
  */
 export function delGraphFor(graph) {
+  return deletionGraphFor(graph);
+}
+
+/**
+ * Yields the graph which contains removals.
+ */
+export function deletionGraphFor(graph) {
   const graphValue = graph.termType == "NamedNode" ? graph.value : graph;
   const base = `${BASE_GRAPH_STRING}/graphs/del`;
   const graphQueryParam = encodeURIComponent(graphValue);

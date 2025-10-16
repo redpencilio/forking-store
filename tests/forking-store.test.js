@@ -36,6 +36,29 @@ describe("ForkingStore", () => {
     });
   });
 
+  describe("persisting", () => {
+    test("`changedGraphs` after `persist` results in empty list ", async () => {
+      const store = new ForkingStore();
+      store.addAll([randomQuad()]);
+      await store.persist();
+      assert.deepEqual(store.changedGraphs(), []);
+    });
+
+    test("unnamed test 1", async () => {
+      const store = new ForkingStore();
+      const someRandomQuad = randomQuad();
+      store.addAll([someRandomQuad]);
+      await store.persist();
+      store.removeStatements([someRandomQuad]);
+      store.addAll([someRandomQuad]);
+      const serialized = store.serializeDataWithAddAndDelGraph(
+        someRandomQuad.graph,
+      );
+      console.log(serialized);
+      // assert.deepEqual(store.changedGraphs(), []);
+    });
+  });
+
   describe("observers", () => {
     test("observers can be used to receive store updates", async () => {
       const store = new ForkingStore();
