@@ -409,7 +409,7 @@ function informObservers(payload, forkingStore) {
  * This class is used to batch multiple data mutations into a single callback.
  * Some forms can cause a lot of small data changes which all would trigger a new observer callback.
  * Grouping them into a single call can improve performance and allows us to remove redundant changes.
- * 
+ *
  * TODO: Currently the inserts and deletes object received from the notifier is not very helpful
  * because we do not know the order of operations, we could improve this by keeping a list
  * This will also enable us to do some optimizations before sending the notification.
