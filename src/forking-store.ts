@@ -9,6 +9,7 @@ import {
   NamedNode,
   Node,
   isNamedNode,
+  Statement,
 } from "rdflib";
 import {
   Quad,
@@ -331,9 +332,15 @@ export default class ForkingStore {
   /**
    * Promise based version of update protocol
    */
-  private update(deletes: Quad[], inserts: Quad[]) {
+  private update(deletes: Statement[], inserts: Statement[]) {
     return new Promise((resolve, reject) => {
-      this.updater.update(deletes, inserts, resolve, reject);
+      this.updater.update(deletes, inserts, (uri, success, errorBody) => {
+        if (success) {
+          resolve(uri);
+        } else {
+          reject(errorBody);
+        }
+      });
     });
   }
 
@@ -402,7 +409,7 @@ function mergedGraphFor(graph: Quad_Graph) {
   return namedNode(`${base}?for=${graphQueryParam}`);
 }
 
-function statementInGraph(statement: Quad, graph: Quad_Graph): Quad {
+function statementInGraph(statement: Quad, graph: Quad_Graph) {
   return quad(statement.subject, statement.predicate, statement.object, graph);
 }
 
