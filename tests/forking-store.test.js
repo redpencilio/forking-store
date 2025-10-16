@@ -44,18 +44,24 @@ describe("ForkingStore", () => {
       assert.deepEqual(store.changedGraphs(), []);
     });
 
-    test("unnamed test 1", async () => {
+    test("A null-operation results in `store.hasChanges` returns false", async () => {
       const store = new ForkingStore();
-      const someRandomQuad = randomQuad();
-      store.addAll([someRandomQuad]);
+      store.addAll(Array.from({ length: 99 }, () => randomQuad()));
       await store.persist();
-      store.removeStatements([someRandomQuad]);
-      store.addAll([someRandomQuad]);
-      const serialized = store.serializeDataWithAddAndDelGraph(
-        someRandomQuad.graph,
-      );
-      console.log(serialized);
-      // assert.deepEqual(store.changedGraphs(), []);
+      const someRandomQuads = Array.from({ length: 99 }, () => randomQuad());
+      store.addAll(someRandomQuads);
+      store.removeStatements(someRandomQuads);
+      assert.deepEqual(store.changedGraphs(), []);
+      assert.equal(store.hasChanges, false);
+    });
+
+    test("An operation results in `store.hasChanges` returns true", async () => {
+      const store = new ForkingStore();
+      store.addAll(Array.from({ length: 99 }, () => randomQuad()));
+      await store.persist();
+      const someRandomQuads = Array.from({ length: 99 }, () => randomQuad());
+      store.addAll(someRandomQuads);
+      assert.equal(store.hasChanges, true);
     });
   });
 

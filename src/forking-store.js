@@ -161,10 +161,16 @@ export default class ForkingStore {
 
   /** @param {Statement[]} inserts */
   addAll(inserts) {
+    // TODO: If there is no real change, the observers should not be notified
+    // E. g. if a quad is added that was already in the graph and not in
+    // the removed set
     for (const ins of inserts) {
-      this.#internalStore.add(
-        statementInGraph(ins, additionGraphFor(ins.graph)),
-      );
+      // Only add if the graph does not have it already
+      if (!this.#internalStore.holdsStatement(ins)) {
+        this.#internalStore.add(
+          statementInGraph(ins, additionGraphFor(ins.graph)),
+        );
+      }
       try {
         // If the statement was in the deletion graph, remove it from there
         this.#internalStore.remove(
@@ -180,10 +186,15 @@ export default class ForkingStore {
 
   /** @param {Statement[]} deletes */
   removeStatements(deletes) {
+    // TODO: If there is no real change, the observers should not be notified
+    // E. g. if a quad is removed that was not in the graph and not in
+    // the added set
     for (const del of deletes) {
-      this.#internalStore.add(
-        statementInGraph(del, deletionGraphFor(del.graph)),
-      );
+      if (this.#internalStore.holdsStatement(del)) {
+        this.#internalStore.add(
+          statementInGraph(del, deletionGraphFor(del.graph)),
+        );
+      }
       try {
         // If the statement was in the addition graph, remove it from there
         this.#internalStore.remove(
@@ -236,6 +247,10 @@ export default class ForkingStore {
     }
 
     return [...forGraphs];
+  }
+
+  get hasChanges() {
+    return this.changedGraphs().length > 0;
   }
 
   mergedGraph(graph) {
@@ -394,6 +409,11 @@ function informObservers(payload, forkingStore) {
  * This class is used to batch multiple data mutations into a single callback.
  * Some forms can cause a lot of small data changes which all would trigger a new observer callback.
  * Grouping them into a single call can improve performance and allows us to remove redundant changes.
+ *
+ * TODO: Currently the inserts and deletes object received from the notifier is not very helpful
+ * because we do not know the order of operations, we could improve this by keeping a list
+ * This will also enable us to do some optimizations before sending the notification.
+ * We could clean up the batched operations to remove null operations (add after remove of the same quad and vice-versa)
  */
 class NotifyObserverBatcher {
   #batchTimeoutId;
@@ -404,7 +424,7 @@ class NotifyObserverBatcher {
    * @param {(data: { inserts: Statement[], deletes: Statement[]}) => void} dataHandler
    */
   constructor(dataHandler) {
-    this.#setup();
+    this.#reset();
     this.#dataHandler = dataHandler;
   }
 
@@ -413,7 +433,7 @@ class NotifyObserverBatcher {
     return !this.#batchTimeoutId;
   }
 
-  #setup() {
+  #reset() {
     this.#pendingDataChanges = { inserts: [], deletes: [] };
     this.#batchTimeoutId = null;
   }
@@ -423,7 +443,7 @@ class NotifyObserverBatcher {
       // We use a timeout delay of 0 so the callback runs as soon as possible while still waiting for all synchronous data changes
       this.#batchTimeoutId = setTimeout(() => {
         this.#dataHandler(this.#pendingDataChanges);
-        this.#setup();
+        this.#reset();
       });
     }
   }
