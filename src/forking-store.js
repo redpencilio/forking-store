@@ -68,7 +68,11 @@ export default class ForkingStore {
   serializeDataWithAddAndDelGraph(graph, format = "text/turtle") {
     return {
       graph: serialize(graph, this.#internalStore, format),
-      additions: serialize(additionGraphFor(graph), this.#internalStore, format),
+      additions: serialize(
+        additionGraphFor(graph),
+        this.#internalStore,
+        format,
+      ),
       removals: serialize(deletionGraphFor(graph), this.#internalStore, format),
     };
   }
@@ -194,7 +198,12 @@ export default class ForkingStore {
   }
 
   removeMatches(subject, predicate, object, graph) {
-    const matches = this.#internalStore.match(subject, predicate, object, graph);
+    const matches = this.#internalStore.match(
+      subject,
+      predicate,
+      object,
+      graph,
+    );
     this.#internalStore.removeStatements(matches);
   }
 
