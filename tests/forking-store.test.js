@@ -44,7 +44,7 @@ describe("ForkingStore", () => {
       assert.deepEqual(store.changedGraphs(), []);
     });
 
-    test("A null-operation results in no changed graphs", async () => {
+    test("A null-operation results in `store.hasChanges` returns false", async () => {
       const store = new ForkingStore();
       store.addAll(Array.from({ length: 99 }, () => randomQuad()));
       await store.persist();
@@ -52,7 +52,16 @@ describe("ForkingStore", () => {
       store.addAll(someRandomQuads);
       store.removeStatements(someRandomQuads);
       assert.deepEqual(store.changedGraphs(), []);
-      assert.equal(store.isDirty(), false);
+      assert.equal(store.hasChanges, false);
+    });
+
+    test("An operation results in `store.hasChanges` returns true", async () => {
+      const store = new ForkingStore();
+      store.addAll(Array.from({ length: 99 }, () => randomQuad()));
+      await store.persist();
+      const someRandomQuads = Array.from({ length: 99 }, () => randomQuad());
+      store.addAll(someRandomQuads);
+      assert.equal(store.hasChanges, true);
     });
   });
 
