@@ -1,27 +1,39 @@
 import {
+  quad,
   Store,
   parse,
   serialize,
   Fetcher,
   UpdateManager,
   namedNode,
-  Statement,
+  NamedNode,
+  Node,
+  isNamedNode,
 } from "rdflib";
+import {
+  Quad,
+  Quad_Graph,
+  Quad_Object,
+  Quad_Predicate,
+  Quad_Subject,
+} from "rdflib/lib/tf-types";
+
+type Data = { inserts: Quad[]; deletes: Quad[] };
 
 const BASE_GRAPH_STRING = "http://mu.semte.ch/libraries/rdf-store";
 
 export default class ForkingStore {
-  internalStore = new Store();
+  internalStore: Store = new Store();
 
   /**
    * @deprecated Use `internalStore` instead. Will be removed in the next major release.
    */
-  graph = this.internalStore;
+  graph: Store = this.internalStore;
 
-  fetcher = null;
-  updater = null;
-  observers = new Map();
-  #callbackBatcher = null;
+  fetcher: Fetcher;
+  updater: UpdateManager;
+  observers = new Map<string | ((data: Data) => void), (data: Data) => void>();
+  #callbackBatcher: NotifyObserverBatcher;
 
   constructor() {
     this.fetcher = new Fetcher(this.internalStore);
@@ -39,14 +51,19 @@ export default class ForkingStore {
   /**
    * Load data from an external graph.
    */
-  async load(source) {
+  async load(source: string) {
     // TODO: should we remove our changes when a graph is being reloaded?
     await this.fetcher.load(source);
   }
 
-  loadDataWithAddAndDelGraph(content, graph, additions, removals, format) {
-    const graphValue = graph.termType == "NamedNode" ? graph.value : graph;
-    parse(content, this.internalStore, graphValue, format);
+  loadDataWithAddAndDelGraph(
+    content: string,
+    graph: Quad_Graph,
+    additions: string,
+    removals: string,
+    format: string,
+  ) {
+    parse(content, this.internalStore, graph.value, format);
     if (additions) {
       parse(
         additions,
@@ -65,7 +82,7 @@ export default class ForkingStore {
     }
   }
 
-  serializeDataWithAddAndDelGraph(graph, format = "text/turtle") {
+  serializeDataWithAddAndDelGraph(graph: NamedNode, format = "text/turtle") {
     return {
       graph: serialize(graph, this.internalStore, format),
       additions: serialize(additionGraphFor(graph), this.internalStore, format),
@@ -73,22 +90,27 @@ export default class ForkingStore {
     };
   }
 
-  serializeDataMergedGraph(graph, format = "text/turtle") {
+  serializeDataMergedGraph(graph: NamedNode, format = "text/turtle") {
     return serialize(this.mergedGraph(graph), this.internalStore, format);
   }
 
   /**
    * Parses content from a file into a specified graph.
    */
-  parse(content, graph, format) {
-    const graphValue = graph.termType == "NamedNode" ? graph.value : graph;
+  parse(content: string, graph: NamedNode | string, format: string) {
+    const graphValue = isNamedNode(graph) ? graph.value : graph;
     parse(content, this.internalStore, graphValue, format);
   }
 
   /**
    * Perform a match on the graph.
    */
-  match(subject, predicate, object, graph) {
+  match(
+    subject?: Quad_Subject | null,
+    predicate?: Quad_Predicate | null,
+    object?: Quad_Object | null,
+    graph?: Quad_Graph | null,
+  ) {
     if (graph) {
       const mainMatch = this.internalStore.match(
         subject,
@@ -111,7 +133,7 @@ export default class ForkingStore {
       return [...mainMatch, ...addMatch]
         .filter((quad) => !delMatch.find((del) => this.equalTriples(del, quad))) // remove statments in delete graph
         .map((quad) => statementInGraph(quad, graph)) // map them to the requested graph
-        .reduce((acc, quad) => {
+        .reduce((acc: Quad[], quad) => {
           // find uniques
           if (!acc.find((accQuad) => this.equalTriples(accQuad, quad))) {
             acc.push(quad);
@@ -129,7 +151,7 @@ export default class ForkingStore {
   /**
    * internal to compare triples
    */
-  equalTriples(a, b) {
+  equalTriples(a: Quad, b: Quad) {
     return (
       a.subject.equals(b.subject) &&
       a.predicate.equals(b.predicate) &&
@@ -140,7 +162,12 @@ export default class ForkingStore {
   /**
    * Perform any match on the graph.
    */
-  any(subject, predicate, object, graph) {
+  any(
+    subject?: Quad_Subject | null,
+    predicate?: Quad_Predicate | null,
+    object?: Quad_Object | null,
+    graph?: Quad_Graph | null,
+  ): true | undefined | Node | Quad_Object {
     const matches = this.match(subject, predicate, object, graph);
 
     if (matches.length > 0) {
@@ -155,8 +182,7 @@ export default class ForkingStore {
     }
   }
 
-  /** @param {Statement[]} inserts */
-  addAll(inserts) {
+  addAll(inserts: Quad[]) {
     for (const ins of inserts) {
       // Only add if the graph does not have it already
       if (!this.internalStore.holdsStatement(ins)) {
@@ -177,8 +203,7 @@ export default class ForkingStore {
     this.#callbackBatcher.addData({ inserts });
   }
 
-  /** @param {Statement[]} deletes */
-  removeStatements(deletes) {
+  removeStatements(deletes: Quad[]) {
     for (const del of deletes) {
       if (this.internalStore.holdsStatement(del)) {
         this.internalStore.add(
@@ -198,12 +223,17 @@ export default class ForkingStore {
     this.#callbackBatcher.addData({ deletes });
   }
 
-  removeMatches(subject, predicate, object, graph) {
+  removeMatches(
+    subject?: Quad_Subject | null,
+    predicate?: Quad_Predicate | null,
+    object?: Quad_Object | null,
+    graph?: Quad_Graph | null,
+  ) {
     const matches = this.internalStore.match(subject, predicate, object, graph);
     this.internalStore.removeStatements(matches);
   }
 
-  allGraphs() {
+  allGraphs(): Set<string> {
     const graphStatements = this.internalStore
       .match()
       .map(({ graph }) => graph.value);
@@ -211,8 +241,8 @@ export default class ForkingStore {
     return new Set(graphStatements);
   }
 
-  changedGraphs() {
-    const forGraphs = new Set();
+  changedGraphs(): string[] {
+    const forGraphs: Set<string> = new Set();
     for (const graph of this.allGraphs()) {
       let url;
       try {
@@ -234,11 +264,11 @@ export default class ForkingStore {
     return [...forGraphs];
   }
 
-  isDirty() {
+  get isDirty(): boolean {
     return this.changedGraphs().length > 0;
   }
 
-  mergedGraph(graph) {
+  mergedGraph(graph: Quad_Graph) {
     // recalculates the merged graph and returns the graph
 
     const mergedGraph = mergedGraphFor(graph);
@@ -273,7 +303,7 @@ export default class ForkingStore {
     return mergedGraph;
   }
 
-  async pushGraphChanges(graph) {
+  async pushGraphChanges(graph: Quad_Graph) {
     const deletes = this.match(null, null, null, deletionGraphFor(graph)).map(
       (statement) => statementInGraph(statement, graph),
     );
@@ -300,9 +330,8 @@ export default class ForkingStore {
 
   /**
    * Promise based version of update protocol
-   * private
    */
-  update(deletes, inserts) {
+  private update(deletes: Quad[], inserts: Quad[]) {
     return new Promise((resolve, reject) => {
       this.updater.update(deletes, inserts, resolve, reject);
     });
@@ -313,12 +342,15 @@ export default class ForkingStore {
    * be called with objects of the shape { deletes, inserts } for any
    * change that is passed through `this.update`.
    */
-  registerObserver(observer, key) {
+  registerObserver(
+    observer: (data: Data) => void,
+    key: string | ((data: Data) => void),
+  ) {
     key = key || observer;
     this.observers.set(key, observer);
   }
 
-  deregisterObserver(key) {
+  deregisterObserver(key: string) {
     this.observers.delete(key);
   }
 
@@ -334,17 +366,16 @@ export default class ForkingStore {
  * @deprecated "add" could refer to the verb or the noun in this case, confusing!
  * Use the {@link additionGraphFor} method
  */
-export function addGraphFor(graph) {
+export function addGraphFor(graph: Quad_Graph) {
   return additionGraphFor(graph);
 }
 
 /**
  * Yields the graphs which contains additions.
  */
-export function additionGraphFor(graph) {
-  const graphValue = graph.termType == "NamedNode" ? graph.value : graph;
+export function additionGraphFor(graph: Quad_Graph) {
   const base = `${BASE_GRAPH_STRING}/graphs/add`;
-  const graphQueryParam = encodeURIComponent(graphValue);
+  const graphQueryParam = encodeURIComponent(graph.value);
   return namedNode(`${base}?for=${graphQueryParam}`);
 }
 
@@ -352,32 +383,30 @@ export function additionGraphFor(graph) {
  * @deprecated "del" could refer to the verb or the noun in this case, confusing!
  * Use the {@link additionGraphFor} method
  */
-export function delGraphFor(graph) {
+export function delGraphFor(graph: Quad_Graph) {
   return deletionGraphFor(graph);
 }
 
 /**
  * Yields the graph which contains removals.
  */
-export function deletionGraphFor(graph) {
-  const graphValue = graph.termType == "NamedNode" ? graph.value : graph;
+export function deletionGraphFor(graph: Quad_Graph) {
   const base = `${BASE_GRAPH_STRING}/graphs/del`;
-  const graphQueryParam = encodeURIComponent(graphValue);
+  const graphQueryParam = encodeURIComponent(graph.value);
   return namedNode(`${base}?for=${graphQueryParam}`);
 }
 
-function mergedGraphFor(graph) {
-  const graphValue = graph.termType == "NamedNode" ? graph.value : graph;
+function mergedGraphFor(graph: Quad_Graph) {
   const base = `${BASE_GRAPH_STRING}/graphs/merged`;
-  const graphQueryParam = encodeURIComponent(graphValue);
+  const graphQueryParam = encodeURIComponent(graph.value);
   return namedNode(`${base}?for=${graphQueryParam}`);
 }
 
-function statementInGraph(quad, graph) {
-  return new Statement(quad.subject, quad.predicate, quad.object, graph);
+function statementInGraph(statement: Quad, graph: Quad_Graph): Quad {
+  return quad(statement.subject, statement.predicate, statement.object, graph);
 }
 
-function informObservers(payload, forkingStore) {
+function informObservers(payload: Data, forkingStore: ForkingStore) {
   for (const [observerKey, observer] of [...forkingStore.observers.entries()]) {
     try {
       observer(payload);
@@ -396,14 +425,11 @@ function informObservers(payload, forkingStore) {
  * Grouping them into a single call can improve performance and allows us to remove redundant changes.
  */
 class NotifyObserverBatcher {
-  #batchTimeoutId;
-  #dataHandler;
-  #pendingDataChanges;
+  #batchTimeoutId: null | number = null;
+  #dataHandler: (data: Data) => void;
+  #pendingDataChanges: Data = { inserts: [], deletes: [] };
 
-  /**
-   * @param {(data: { inserts: Statement[], deletes: Statement[]}) => void} dataHandler
-   */
-  constructor(dataHandler) {
+  constructor(dataHandler: (data: Data) => void) {
     this.#setup();
     this.#dataHandler = dataHandler;
   }
@@ -428,7 +454,7 @@ class NotifyObserverBatcher {
     }
   }
 
-  addData({ inserts = [], deletes = [] }) {
+  addData({ inserts = [], deletes = [] }: Partial<Data>) {
     this.#ensureBatch();
 
     this.#pendingDataChanges.inserts.push(...inserts);
