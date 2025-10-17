@@ -1,13 +1,13 @@
 steps:
-  build:
-    image: woodpeckerci/plugin-docker-buildx
+  install:
+    image: node:22-alpine
+    commands:
+      - npm ci
+  release:
+    image: plugins/npm
     settings:
-      repo: ${CI_REPO}
-      tags: "${CI_COMMIT_TAG##v}"
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
+      token:
+        from_secret: npm_access_token
 when:
   - event: tag
     ref: refs/tags/v*
