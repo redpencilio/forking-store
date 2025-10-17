@@ -1,3 +1,13 @@
+## v2.2.1 (2025-10-17)
+
+#### :rocket: Enhancement
+
+- [#29](https://github.com/redpencilio/forking-store/pull/29) Improve variable naming
+
+#### :house: Internal
+
+- [#30] (https://github.com/redpencilio/forking-store/pull/30) Add `hasChanges` getter
+
 ## v2.2.0 (2024-01-22)
 
 #### :rocket: Enhancement
