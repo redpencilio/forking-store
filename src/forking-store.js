@@ -1,5 +1,5 @@
 import {
-  Store,
+  graph,
   parse,
   serialize,
   Fetcher,
@@ -11,7 +11,9 @@ import {
 const BASE_GRAPH_STRING = "http://mu.semte.ch/libraries/rdf-store";
 
 export default class ForkingStore {
-  #internalStore = new Store();
+  // See https://github.com/redpencilio/forking-store/issues/32 when considering using
+  // the `Store` constructor instead of `graph()` 
+  #internalStore = graph(); // Is not actually a graph but rather a store, bad naming from rdflib 
 
   /**
    * @deprecated Will be removed in the next major release.
