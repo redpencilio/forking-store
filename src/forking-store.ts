@@ -341,7 +341,12 @@ export default class ForkingStore {
     );
 
     try {
-      await this.updater.update(deletes, inserts);
+      // TODO: figure out how this should work with the updater. Currently tries to
+      // retrieve http information from the graph of the insertion and deletion quads
+      // await this.updater.update(deletes, inserts);
+
+      this.#internalStore.addAll(inserts);
+      this.#internalStore.removeStatements(deletes);
     } finally {
       this.removeMatches(null, null, null, deletionGraphFor(graph));
       this.removeMatches(null, null, null, additionGraphFor(graph));
