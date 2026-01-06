@@ -5,8 +5,9 @@ const {
   default: ForkingStore,
   addGraphFor,
   delGraphFor,
-} = require("forking-store"); // eslint-disable-line n/no-missing-require
-const { additionGraphFor, deletionGraphFor } = require("../dist/forking-store");
+  additionGraphFor,
+  deletionGraphFor,
+} = require("forking-store");
 
 test("CJS imports work", () => {
   assert.ok(ForkingStore);
