@@ -9,6 +9,7 @@
     "types": "./dist/forking-store.d.ts"
   },
   "scripts": {
+    "typecheck": "tsc --noEmit",
     "build": "rollup -c",
     "lint": "concurrently --group --prefix-colors auto \"npm:lint:*(!fix)\"",
     "lint:fix": "concurrently --group --prefix-colors auto \"npm:lint:*:fix\"",
