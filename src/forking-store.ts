@@ -1,19 +1,19 @@
 import {
   graph,
-  Store,
   parse,
   serialize,
   Fetcher,
   UpdateManager,
   namedNode,
   quad,
-  NamedNode,
   isNamedNode,
   isTerm,
-  Statement,
 } from "rdflib";
 
-import {
+import type { Store, Statement } from "rdflib";
+
+import type {
+  NamedNode,
   DefaultGraph,
   Quad,
   Quad_Graph,
