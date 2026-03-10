@@ -1,4 +1,6 @@
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const assert = require("node:assert");
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const test = require("node:test");
 
 const {
@@ -7,6 +9,7 @@ const {
   delGraphFor,
   additionGraphFor,
   deletionGraphFor,
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
 } = require("forking-store");
 
 test("CJS imports work", () => {
