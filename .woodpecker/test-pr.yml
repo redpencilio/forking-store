@@ -1,18 +1,18 @@
 steps:
   install:
-    image: danlynn/ember-cli:6.5.0-node_22.16
+    image: node:22
     commands:
       - npm ci
   typecheck:
-    image: danlynn/ember-cli:6.5.0-node_22.16
+    image: node:22
     commands:
       - npm run typecheck
   lint-ts:
-    image: danlynn/ember-cli:6.5.0-node_22.16
+    image: node:22
     commands:
       - npm run lint:ts
   test:
-    image: danlynn/ember-cli:6.5.0-node_22.16
+    image: node:22
     commands:
       - npm run test
 when:
