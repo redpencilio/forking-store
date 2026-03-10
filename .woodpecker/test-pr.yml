@@ -1,18 +1,18 @@
 steps:
   install:
-    image: node:22
+    image: node:22-alpine
     commands:
       - npm ci
   typecheck:
-    image: node:22
+    image: node:22-alpine
     commands:
       - npm run typecheck
   lint-ts:
-    image: node:22
+    image: node:22-alpine
     commands:
       - npm run lint:ts
   test:
-    image: node:22
+    image: node:22-alpine
     commands:
       - npm run test
 when:
