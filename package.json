@@ -47,5 +47,8 @@
     "npm": {
       "publish": false
     }
+  },
+  "volta": {
+    "node": "22.22.1"
   }
 }
