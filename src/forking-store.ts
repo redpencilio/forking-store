@@ -10,6 +10,7 @@ import {
   NamedNode,
   isNamedNode,
   isTerm,
+  Statement,
 } from "rdflib";
 
 import {
@@ -341,12 +342,7 @@ export default class ForkingStore {
     );
 
     try {
-      // TODO: figure out how this should work with the updater. Currently tries to
-      // retrieve http information from the graph of the insertion and deletion quads
-      // await this.updater.update(deletes, inserts);
-
-      this.#internalStore.addAll(inserts);
-      this.#internalStore.removeStatements(deletes);
+      await this.update(deletes, inserts);
     } finally {
       this.removeMatches(null, null, null, deletionGraphFor(graph));
       this.removeMatches(null, null, null, additionGraphFor(graph));
@@ -359,6 +355,16 @@ export default class ForkingStore {
         .map((graphString) => namedNode(graphString))
         .map((graph) => this.pushGraphChanges(graph)),
     );
+  }
+
+  /**
+   * Promise based version of update protocol
+   */
+  update(deletes: ReadonlyArray<Statement>, inserts: ReadonlyArray<Statement>) {
+    return new Promise((resolve, reject) => {
+      // @ts-expect-error: TODO fix this call
+      this.updater.update(deletes, inserts, resolve, reject);
+    });
   }
 
   /**
