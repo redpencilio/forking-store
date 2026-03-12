@@ -3,7 +3,7 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 import json from "@eslint/json";
 import { defineConfig, globalIgnores } from "eslint/config";
-import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
+import eslintConfigPrettier from "eslint-config-prettier/flat";
 
 export default defineConfig([
   globalIgnores(["dist", "package-lock.json"]),
@@ -40,5 +40,5 @@ export default defineConfig([
       ],
     },
   },
-  eslintPluginPrettierRecommended,
+  eslintConfigPrettier,
 ]);
