@@ -464,7 +464,7 @@ function informObservers(payload: DeltaTriples, forkingStore: ForkingStore) {
  * We could clean up the batched operations to remove null operations (add after remove of the same quad and vice-versa)
  */
 class NotifyObserverBatcher {
-  #batchTimeoutId: NodeJS.Timeout | null = null;
+  #batchTimeoutId: ReturnType<typeof setTimeout> | null = null;
   #dataHandler: (data: DeltaTriples) => void;
   #pendingDataChanges: DeltaTriples = { inserts: [], deletes: [] };
 
