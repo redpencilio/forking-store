@@ -357,7 +357,7 @@ export default class ForkingStore {
   /**
    * Promise based version of update protocol
    */
-  update(deletes: ReadonlyArray<Statement>, inserts: ReadonlyArray<Statement>) {
+  private update(deletes: ReadonlyArray<Statement>, inserts: ReadonlyArray<Statement>) {
     return new Promise((resolve, reject) => {
       // @ts-expect-error: TODO fix this call
       this.updater.update(deletes, inserts, resolve, reject);
