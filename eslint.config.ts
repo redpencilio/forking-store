@@ -28,8 +28,6 @@ export default defineConfig([
   },
   {
     rules: {
-      semi: ["error", "always"],
-      "linebreak-style": ["error", "unix"],
       "@typescript-eslint/no-unused-vars": [
         "error",
         {
