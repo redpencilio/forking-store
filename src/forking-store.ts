@@ -90,10 +90,7 @@ export default class ForkingStore {
     }
   }
 
-  serializeDataWithAddAndDelGraph(
-    graph: NamedNode,
-    format = "text/turtle",
-  ) {
+  serializeDataWithAddAndDelGraph(graph: NamedNode, format = "text/turtle") {
     return {
       graph: serialize(graph, this.#internalStore, format),
       additions: serialize(
@@ -197,7 +194,9 @@ export default class ForkingStore {
     }
   }
 
-  addAll(inserts: Quad<Quad_Subject, Quad_Predicate, Quad_Object, NamedNode>[]) {
+  addAll(
+    inserts: Quad<Quad_Subject, Quad_Predicate, Quad_Object, NamedNode>[],
+  ) {
     // TODO: If there is no real change, the observers should not be notified
     // E. g. if a quad is added that was already in the graph and not in
     // the removed set
@@ -221,7 +220,9 @@ export default class ForkingStore {
     this.#callbackBatcher.addData({ inserts });
   }
 
-  removeStatements(deletes: Quad<Quad_Subject, Quad_Predicate, Quad_Object, NamedNode>[]) {
+  removeStatements(
+    deletes: Quad<Quad_Subject, Quad_Predicate, Quad_Object, NamedNode>[],
+  ) {
     // TODO: If there is no real change, the observers should not be notified
     // E. g. if a quad is removed that was not in the graph and not in
     // the added set
@@ -357,7 +358,10 @@ export default class ForkingStore {
   /**
    * Promise based version of update protocol
    */
-  private update(deletes: ReadonlyArray<Statement>, inserts: ReadonlyArray<Statement>) {
+  private update(
+    deletes: ReadonlyArray<Statement>,
+    inserts: ReadonlyArray<Statement>,
+  ) {
     return new Promise((resolve, reject) => {
       // @ts-expect-error: TODO fix this call
       this.updater.update(deletes, inserts, resolve, reject);
@@ -400,9 +404,7 @@ export function addGraphFor(graph: NamedNode) {
 /**
  * Yields the graphs which contains additions.
  */
-export function additionGraphFor(
-  graph: NamedNode | string,
-) {
+export function additionGraphFor(graph: NamedNode | string) {
   const graphValue = isNamedNode(graph) ? graph.value : graph;
   const base = `${BASE_GRAPH_STRING}/graphs/add`;
   const graphQueryParam = encodeURIComponent(graphValue);
@@ -420,9 +422,7 @@ export function delGraphFor(graph: NamedNode | string) {
 /**
  * Yields the graph which contains removals.
  */
-export function deletionGraphFor(
-  graph: NamedNode | string,
-) {
+export function deletionGraphFor(graph: NamedNode | string) {
   const graphValue = isNamedNode(graph) ? graph.value : graph;
   const base = `${BASE_GRAPH_STRING}/graphs/del`;
   const graphQueryParam = encodeURIComponent(graphValue);

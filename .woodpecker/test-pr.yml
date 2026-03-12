@@ -3,14 +3,14 @@ steps:
     image: node:22-alpine
     commands:
       - npm ci
-  typecheck:
+  lint-types:
     image: node:22-alpine
     commands:
-      - npm run typecheck
-  lint:
+      - npm run lint:types
+  lint-js:
     image: node:22-alpine
     commands:
-      - npm run lint
+      - npm run lint:js
   test:
     image: node:22-alpine
     commands:
