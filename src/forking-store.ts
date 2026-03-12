@@ -404,7 +404,7 @@ export function addGraphFor(graph: Quad_Graph) {
  * Yields the graphs which contains additions.
  */
 export function additionGraphFor(
-  graph: Quad_Graph | string | number | boolean,
+  graph: Quad_Graph | string,
 ) {
   const graphValue = isTerm(graph) ? graph.value : graph;
   const base = `${BASE_GRAPH_STRING}/graphs/add`;
@@ -424,7 +424,7 @@ export function delGraphFor(graph: Quad_Graph) {
  * Yields the graph which contains removals.
  */
 export function deletionGraphFor(
-  graph: Quad_Graph | string | number | boolean,
+  graph: Quad_Graph | string,
 ) {
   const graphValue = isTerm(graph) ? graph.value : graph;
   const base = `${BASE_GRAPH_STRING}/graphs/del`;
