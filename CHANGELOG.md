@@ -1,7 +1,8 @@
 ## v2.2.3 (2025-11-03)
 
 #### :bug: Bug Fix
-* [#33](https://github.com/redpencilio/forking-store/pull/33) Reenable support for "Collections" ([@kobemertens](https://github.com/kobemertens))
+
+- [#33](https://github.com/redpencilio/forking-store/pull/33) Reenable support for "Collections" ([@kobemertens](https://github.com/kobemertens))
 
 ## v2.2.1 & v2.2.2 (2025-10-17)
 
