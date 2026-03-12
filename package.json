@@ -9,10 +9,14 @@
     "types": "./dist/forking-store.d.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit",
     "build": "rollup -c",
-    "lint": "eslint . --cache",
-    "lint:fix": "eslint . --cache --fix",
+    "lint": "concurrently --group --prefix-colors auto \"npm:lint:*(!fix)\"",
+    "lint:fix": "concurrently --group --prefix-colors auto \"npm:lint:*:fix\"",
+    "lint:js": "eslint . --cache",
+    "lint:js:fix": "eslint . --cache --fix",
+    "lint:types": "tsc --noEmit",
+    "lint:format": "prettier --cache --check .",
+    "lint:format:fix": "prettier --cache --write .",
     "prepare": "npm run build",
     "release": "release-it",
     "test": "npm run build && node --test"
