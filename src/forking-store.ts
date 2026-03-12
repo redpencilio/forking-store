@@ -212,7 +212,7 @@ export default class ForkingStore {
         this.#internalStore.remove(
           statementInGraph(ins, deletionGraphFor(ins.graph)),
         );
-      } catch (_e) {
+      } catch {
         // this is okay!  the statement may not exist
       }
     }
@@ -237,7 +237,7 @@ export default class ForkingStore {
         this.#internalStore.remove(
           statementInGraph(del, additionGraphFor(del.graph)),
         );
-      } catch (_e) {
+      } catch {
         // this is okay!  the statement may not exist
       }
     }
@@ -274,7 +274,7 @@ export default class ForkingStore {
       let url;
       try {
         url = new URL(graph);
-      } catch (_e) {
+      } catch {
         /* this may happen */
       }
 
@@ -320,7 +320,7 @@ export default class ForkingStore {
     delContent.forEach((statement) => {
       try {
         this.#internalStore.remove(statement);
-      } catch (_e) {
+      } catch {
         /* */
       }
     });
