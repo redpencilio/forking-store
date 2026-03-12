@@ -7,16 +7,13 @@ import {
   namedNode,
   quad,
   isNamedNode,
-  isTerm,
 } from "rdflib";
 
 import type { Store, Statement } from "rdflib";
 
 import type {
   NamedNode,
-  DefaultGraph,
   Quad,
-  Quad_Graph,
   Quad_Object,
   Quad_Predicate,
   Quad_Subject,
@@ -68,12 +65,12 @@ export default class ForkingStore {
 
   loadDataWithAddAndDelGraph(
     content: string,
-    graph: Quad_Graph,
+    graph: NamedNode | string,
     additions: string,
     removals: string,
     format: string,
   ) {
-    const graphValue = isTerm(graph) ? graph.value : graph;
+    const graphValue = isNamedNode(graph) ? graph.value : graph;
     parse(content, this.#internalStore, graphValue, format);
     if (additions) {
       parse(
@@ -94,7 +91,7 @@ export default class ForkingStore {
   }
 
   serializeDataWithAddAndDelGraph(
-    graph: Exclude<DefaultGraph, Quad_Graph>,
+    graph: NamedNode,
     format = "text/turtle",
   ) {
     return {
@@ -127,7 +124,7 @@ export default class ForkingStore {
     subject?: Quad_Subject | null,
     predicate?: Quad_Predicate | null,
     object?: Quad_Object | null,
-    graph?: Quad_Graph | null,
+    graph?: NamedNode | null,
   ) {
     if (graph) {
       const mainMatch = this.#internalStore.match(
@@ -184,7 +181,7 @@ export default class ForkingStore {
     subject?: Quad_Subject | null,
     predicate?: Quad_Predicate | null,
     object?: Quad_Object | null,
-    graph?: Quad_Graph | null,
+    graph?: NamedNode | null,
   ) {
     const matches = this.match(subject, predicate, object, graph);
 
@@ -200,7 +197,7 @@ export default class ForkingStore {
     }
   }
 
-  addAll(inserts: Quad[]) {
+  addAll(inserts: Quad<Quad_Subject, Quad_Predicate, Quad_Object, NamedNode>[]) {
     // TODO: If there is no real change, the observers should not be notified
     // E. g. if a quad is added that was already in the graph and not in
     // the removed set
@@ -224,7 +221,7 @@ export default class ForkingStore {
     this.#callbackBatcher.addData({ inserts });
   }
 
-  removeStatements(deletes: Quad[]) {
+  removeStatements(deletes: Quad<Quad_Subject, Quad_Predicate, Quad_Object, NamedNode>[]) {
     // TODO: If there is no real change, the observers should not be notified
     // E. g. if a quad is removed that was not in the graph and not in
     // the added set
@@ -251,7 +248,7 @@ export default class ForkingStore {
     subject?: Quad_Subject | null,
     predicate?: Quad_Predicate | null,
     object?: Quad_Object | null,
-    graph?: Quad_Graph | null,
+    graph?: NamedNode | null,
   ) {
     const matches = this.#internalStore.match(
       subject,
@@ -297,7 +294,7 @@ export default class ForkingStore {
     return this.changedGraphs().length > 0;
   }
 
-  mergedGraph(graph: Quad_Graph) {
+  mergedGraph(graph: NamedNode) {
     // recalculates the merged graph and returns the graph
 
     const mergedGraph = mergedGraphFor(graph);
@@ -332,7 +329,7 @@ export default class ForkingStore {
     return mergedGraph;
   }
 
-  async pushGraphChanges(graph: Quad_Graph) {
+  async pushGraphChanges(graph: NamedNode) {
     const deletes = this.match(null, null, null, deletionGraphFor(graph)).map(
       (statement) => statementInGraph(statement, graph),
     );
@@ -396,7 +393,7 @@ export default class ForkingStore {
  * @deprecated "add" could refer to the verb or the noun in this case, confusing!
  * Use the {@link additionGraphFor} method
  */
-export function addGraphFor(graph: Quad_Graph) {
+export function addGraphFor(graph: NamedNode) {
   return additionGraphFor(graph);
 }
 
@@ -404,9 +401,9 @@ export function addGraphFor(graph: Quad_Graph) {
  * Yields the graphs which contains additions.
  */
 export function additionGraphFor(
-  graph: Quad_Graph | string,
+  graph: NamedNode | string,
 ) {
-  const graphValue = isTerm(graph) ? graph.value : graph;
+  const graphValue = isNamedNode(graph) ? graph.value : graph;
   const base = `${BASE_GRAPH_STRING}/graphs/add`;
   const graphQueryParam = encodeURIComponent(graphValue);
   return namedNode(`${base}?for=${graphQueryParam}`);
@@ -416,7 +413,7 @@ export function additionGraphFor(
  * @deprecated "del" could refer to the verb or the noun in this case, confusing!
  * Use the {@link additionGraphFor} method
  */
-export function delGraphFor(graph: Quad_Graph) {
+export function delGraphFor(graph: NamedNode | string) {
   return deletionGraphFor(graph);
 }
 
@@ -424,22 +421,22 @@ export function delGraphFor(graph: Quad_Graph) {
  * Yields the graph which contains removals.
  */
 export function deletionGraphFor(
-  graph: Quad_Graph | string,
+  graph: NamedNode | string,
 ) {
-  const graphValue = isTerm(graph) ? graph.value : graph;
+  const graphValue = isNamedNode(graph) ? graph.value : graph;
   const base = `${BASE_GRAPH_STRING}/graphs/del`;
   const graphQueryParam = encodeURIComponent(graphValue);
   return namedNode(`${base}?for=${graphQueryParam}`);
 }
 
-function mergedGraphFor(graph: Quad_Graph) {
-  const graphValue = isTerm(graph) ? graph.value : graph;
+function mergedGraphFor(graph: NamedNode | string) {
+  const graphValue = isNamedNode(graph) ? graph.value : graph;
   const base = `${BASE_GRAPH_STRING}/graphs/merged`;
   const graphQueryParam = encodeURIComponent(graphValue);
   return namedNode(`${base}?for=${graphQueryParam}`);
 }
 
-function statementInGraph(statement: Quad, graph: Quad_Graph) {
+function statementInGraph(statement: Quad, graph: NamedNode) {
   return quad(statement.subject, statement.predicate, statement.object, graph);
 }
 
