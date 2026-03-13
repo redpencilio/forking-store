@@ -1,3 +1,15 @@
+## Unreleased (2026-03-13)
+
+#### :rocket: Enhancement
+* [#34](https://github.com/redpencilio/forking-store/pull/34) typescript conversion ([@kobemertens](https://github.com/kobemertens))
+
+#### :house: Internal
+* [#35](https://github.com/redpencilio/forking-store/pull/35) Modernize eslint and prettier setup ([@elpoelma](https://github.com/elpoelma))
+
+#### Committers: 2
+- Elena Poelman ([@elpoelma](https://github.com/elpoelma))
+- Kobe Mertens ([@kobemertens](https://github.com/kobemertens))
+
 ## v2.2.3 (2025-11-03)
 
 #### :bug: Bug Fix
