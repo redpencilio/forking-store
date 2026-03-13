@@ -1,4 +1,4 @@
-## Unreleased (2026-03-13)
+## v2.3.0 (2026-03-13)
 
 #### :rocket: Enhancement
 * [#34](https://github.com/redpencilio/forking-store/pull/34) typescript conversion ([@kobemertens](https://github.com/kobemertens))
