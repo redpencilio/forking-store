@@ -9,11 +9,24 @@ export default defineConfig([
   globalIgnores(["dist", "package-lock.json"]),
   {
     files: ["**/*.{js,mjs,cjs,ts,mts,cts}"],
-    plugins: { js },
-    extends: ["js/recommended"],
     languageOptions: { globals: { ...globals["shared-node-browser"] } },
   },
-  tseslint.configs.recommended,
+  {
+    files: ["**/*.{js,mjs,cjs}"],
+    plugins: { js },
+    extends: ["js/recommended"],
+  },
+  {
+    files: ["**/*.{ts,mts,cts}"],
+    ignores: ["eslint.config.ts"],
+    languageOptions: {
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    extends: [...tseslint.configs.recommendedTypeChecked],
+  },
   {
     files: ["**/*.json"],
     plugins: { json },
@@ -25,18 +38,6 @@ export default defineConfig([
     plugins: { json },
     language: "json/jsonc",
     extends: ["json/recommended"],
-  },
-  {
-    rules: {
-      "@typescript-eslint/no-unused-vars": [
-        "error",
-        {
-          varsIgnorePattern: "^_",
-          argsIgnorePattern: "^_",
-          caughtErrorsIgnorePattern: "^_",
-        },
-      ],
-    },
   },
   eslintConfigPrettier,
 ]);

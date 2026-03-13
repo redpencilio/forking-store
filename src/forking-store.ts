@@ -364,7 +364,7 @@ export default class ForkingStore {
   ) {
     return new Promise((resolve, reject) => {
       // @ts-expect-error: TODO fix this call
-      this.updater.update(deletes, inserts, resolve, reject);
+      void this.updater.update(deletes, inserts, resolve, reject);
     });
   }
 
@@ -446,7 +446,7 @@ function informObservers(payload: DeltaTriples, forkingStore: ForkingStore) {
       observer(payload);
     } catch (e) {
       console.error(
-        `Something went wrong during the callback of observer ${observerKey}`,
+        `Something went wrong during the callback of observer ${observerKey as string}`,
       );
       console.error(e);
     }
